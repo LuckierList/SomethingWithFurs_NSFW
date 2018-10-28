@@ -2,18 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DataTypes : MonoBehaviour
+public class E621_MainMenu : GlobalActions
 {
 
 	// Use this for initialization
-	void Start ()
-    {
+	void Start () {
 		
 	}
 	
 	// Update is called once per frame
-	void Update ()
-    {
+	void Update () {
 		
 	}
 }
