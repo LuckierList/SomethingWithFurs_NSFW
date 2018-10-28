@@ -74,7 +74,7 @@ public class GlobalActions : MonoBehaviour
         functionConfirm = actionConfirm;
         functionDeny = actionDeny;
 
-        if(actionDeny == null)
+        if(actionConfirm == null)
         {
             usedBox.buttonYes.gameObject.SetActive(false);
             usedBox.buttonNo.gameObject.SetActive(false);
