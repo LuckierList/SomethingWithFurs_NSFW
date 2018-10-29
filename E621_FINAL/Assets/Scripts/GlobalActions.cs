@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading;
 
 public class GlobalActions : MonoBehaviour
 {
@@ -13,10 +14,19 @@ public class GlobalActions : MonoBehaviour
     public delegate void ButtonDeny();
     ButtonDeny functionDeny;
 
+    //Loading CTRL!!!!
+    [HideInInspector]
+    public LoadingComponents loadingComp;
+    [HideInInspector]
+    public bool loadingWait;
+
     // Use this for initialization
-    void Awake()
+    public virtual void Awake()
     {
-        adviceComp = GameObject.Find("Advice").GetComponent<AdviceComponents>();
+        loadingWait = false;
+        adviceComp = GameObject.FindGameObjectWithTag("Advice").GetComponent<AdviceComponents>();
+        loadingComp = GameObject.FindGameObjectWithTag("Loading").GetComponent<LoadingComponents>();
+        UnityThread.initUnityThread();
 	}
 	
 	// Update is called once per frame
@@ -64,7 +74,7 @@ public class GlobalActions : MonoBehaviour
     /// <param name="actionConfrim">Action when clicking Ok/Yes.</param>
     /// <param name="actionDeny">Action when clicking No. Will force a double button to appear instead of only the button Ok.</param>
     /// 
-    public void CreateAdvice(string title, string text, int size = 1, ButtonConfirm actionConfirm = null, ButtonDeny actionDeny = null)
+    public void CreateAdvice(string title, string text, int size = 0, ButtonConfirm actionConfirm = null, ButtonDeny actionDeny = null)
     {
         //Determinar el tamaño de la caja de mensaje
         adviceComp.panel.gameObject.SetActive(true);
@@ -101,6 +111,39 @@ public class GlobalActions : MonoBehaviour
         usedBox.buttonNo.onClick.AddListener(ButtonDoDeny);
 
         usedBox.obj.SetActive(true);
+    }
+    //-----------------------------------------------------------
+
+    //-----------------------------------------------------------
+    //Loading Controls
+    public void LoadingReset(string newTitle)
+    {
+        loadingComp.slider.value = 0f;
+        loadingComp.message.text = newTitle;
+        loadingComp.obj.SetActive(true);
+    }
+    
+    public void UpdateLoadingValue(float value)
+    {
+        loadingComp.slider.value = value;
+        //if (value == 1f && !loadingWait) loadingComp.obj.SetActive(false);
+    }
+
+    public void StartLoadingWait()
+    {
+        loadingWait = true;
+        StartCoroutine(LoadingWait());
+    }
+
+    IEnumerator LoadingWait()
+    {
+        while (loadingWait)
+        {
+            loadingComp.slider.value += Time.deltaTime;
+            if (loadingComp.slider.value >= 1f) loadingComp.slider.value = 0f;
+            yield return null;
+        }
+        yield return null;
     }
     //-----------------------------------------------------------
 }
