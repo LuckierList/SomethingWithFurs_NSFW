@@ -55,15 +55,6 @@ public class Data : MonoBehaviour
         }
     }
 
-    public void ConvertOldData()
-    {
-        BinaryFormatter bf = new BinaryFormatter();
-        FileStream file = null;
-
-        if(File.Exists(Application.persistentDataPath + "/OldSaves/ImageData.dat"))
-
-    }
-
     public void SaveAllData()
     {
         SaveData("imageData");

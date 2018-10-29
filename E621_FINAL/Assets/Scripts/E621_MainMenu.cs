@@ -4,6 +4,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
+using System.Linq;
+
 public class E621_MainMenu : GlobalActions
 {
     public Image imageOpPortrait;
@@ -118,7 +123,7 @@ public class E621_MainMenu : GlobalActions
                 CreateAdvice("Warning!", "Are you sure you want to reload all DATA?", 0 ,Data.act.ReloadAllData);
                 break;
             case "convertOldData":
-                CreateAdvice("Warning!", "Old saved data may be corrupted by this action. You should make a backup. Continue?", 0, () => { print("Here a conversion should happen..."); });
+                CreateAdvice("Warning!", "Old saved data may be corrupted by this action. You should make a backup. Continue?", 0, ConvertOldData);
                 break;
             case "return":
                 Application.Quit();
@@ -128,5 +133,106 @@ public class E621_MainMenu : GlobalActions
                 CreateAdvice("What the...?", "Something went horribly wrong here...");
                 break;
         }
+    }
+
+    public void ConvertOldData()
+    {
+        if (File.Exists(Application.persistentDataPath + "/OldSaves/Images.dat") && File.Exists(Application.persistentDataPath + "/OldSaves/ImagesFilter.dat"))
+        {
+
+            LoadingReset("Loading the files (Images.dat)...");
+            StartLoadingWait();
+            Data.act.imageData.Clear();
+            Thread t = new Thread(new ThreadStart(ConvertOldDataThread));
+            t.Start();
+        }
+        else print("Failed to load Images.dat and ImagesFilter.dat");
+    }
+
+    void ConvertOldDataThread()
+    {
+        bool done = false;
+        float cont = 0f;
+
+        BinaryFormatter bf = new BinaryFormatter();
+        FileStream file1 = null;
+        FileStream file2 = null;
+
+        List<ImageGal> imageGal;
+        List<ImageGalFilter> imageFilter;
+
+        
+
+        UnityThread.executeInUpdate(
+            () =>
+            {
+                //open 1
+                file1 = File.Open(Application.persistentDataPath + "/OldSaves/Images.dat", FileMode.Open);
+                
+                //open2
+                file2 = File.Open(Application.persistentDataPath + "/OldSaves/ImagesFilter.dat", FileMode.Open);
+                
+                //loadingWait = false;
+                //loadingComp.obj.SetActive(false);
+                //print("Done");
+                done = true;
+            });
+        while (!done) { }
+        done = false;
+        imageGal = (List<ImageGal>)bf.Deserialize(file1);
+        file1.Close();
+        UnityThread.executeInUpdate(
+            () =>
+            {
+                LoadingReset("Loading the files (ImagesFilter.dat)...");
+            });
+        imageFilter = (List<ImageGalFilter>)bf.Deserialize(file2);
+        file2.Close();
+
+        //When loaded, check the filtered data, then check if there is data for this image in image data.
+        foreach(ImageGalFilter img in imageFilter)
+        {
+            ImageData newData = null;
+            UnityThread.executeInUpdate(() =>
+            {
+                loadingWait = false;
+                UpdateLoadingValue(cont/imageFilter.Count,"Converting old save data. ( " + (cont + 1) + " / " + imageFilter.Count + " )");
+                int newID = 0;
+                if (img.filename.Contains("-"))
+                {
+                    string _newID = img.filename.Substring(0, img.filename.IndexOf("-"));
+                    newID = int.Parse(_newID);
+                }
+                newData = new ImageData("E621", newID, img.filename, img.filtered);
+                
+                done = true;
+            });
+            while (!done) { }
+            done = false;
+
+            ImageGal imgData = imageGal.Where(temp => temp.filename == newData.filename).SingleOrDefault();
+            if(imgData != null)
+            {
+                newData.tags = imgData.tags;
+            }
+            UnityThread.executeInUpdate(()=>
+            {
+                Data.act.imageData.Add(newData);
+                cont++;
+                done = true;
+            });
+            while (!done) { }
+            done = false;
+        }
+        UnityThread.executeInUpdate(
+            () =>
+            {
+                loadingWait = false;
+                loadingComp.obj.SetActive(false);
+                print("Done");
+                done = true;
+            });
+        while (!done) { }
+        done = false;
     }
 }

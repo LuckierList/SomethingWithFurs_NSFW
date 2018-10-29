@@ -131,9 +131,10 @@ public class GlobalActions : MonoBehaviour
         loadingComp.obj.SetActive(true);
     }
 
-    public void UpdateLoadingValue(float value)
+    public void UpdateLoadingValue(float value, string message = "")
     {
         loadingComp.slider.value = value;
+        if (message != "") loadingComp.message.text = message;
         //if (value == 1f && !loadingWait) loadingComp.obj.SetActive(false);
     }
 

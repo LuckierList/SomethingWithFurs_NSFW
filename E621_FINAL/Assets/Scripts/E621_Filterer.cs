@@ -292,6 +292,7 @@ public class E621_Filterer : GlobalActions
     void DetermineFilterStatus()
     {
         ImageData temp = Data.act.imageData.Where(tempo => tempo.filename == Path.GetFileName(files[currentIndex])).SingleOrDefault();
+        //print("ID: " + temp.id);
         if (temp != null)
         {
             if (temp.filtered)
