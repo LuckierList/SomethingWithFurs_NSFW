@@ -10,15 +10,17 @@ using System.Threading;
 
 public class E621_Filterer : GlobalActions
 {
-
-    Button[] navigationButtons;
+    List<Button> navigationButtons;
+    List<Button> filteringButtons;
 
     public InputField inputStraight, inputDickgirl, inputIntersex, inputHerm;
     public Dropdown dropSource, dropFormat;
-    public Button buttonKeep, buttonFilter, buttonNext, buttonPrev, buttonOpenInPage, buttonMoveToFolder;
+    public Button buttonKeep, buttonFilter, buttonDeleteData, buttonNext, buttonPrev, buttonOpenInPage, buttonMoveToFolder, buttonSave;
 
-    public Sprite imgBlank;
+    public Sprite imgBlank, imgLoading, imgError;
     public Image imageShow;
+
+    public Text textCurrentlyShowing, textFilteredComparation, textFilteredPercent;
 
     int currentIndex = 0;
     [HideInInspector]
@@ -31,6 +33,20 @@ public class E621_Filterer : GlobalActions
 
     private void Start()
     {
+        navigationButtons = new List<Button>();
+        //navigationButtons.Add();
+        navigationButtons.Add(buttonNext);
+        navigationButtons.Add(buttonPrev);
+        navigationButtons.Add(buttonOpenInPage);
+        navigationButtons.Add(buttonMoveToFolder);
+        //navigationButtons.Add(buttonSave);
+
+        filteringButtons = new List<Button>();
+        //filteringButtons.Add();
+        filteringButtons.Add(buttonFilter);
+        filteringButtons.Add(buttonKeep);
+        filteringButtons.Add(buttonDeleteData);
+
         canUseMode = new bool[4];
         files = new List<string>();
         DefaultURLs();
@@ -39,17 +55,66 @@ public class E621_Filterer : GlobalActions
 
     private void Update()
     {
+        StatusTextUpdater();
         NavigationButtonsSet();
+        KeyboardMovement();
     }
-
+    //---------------------------------------------------------------------------
+    //Update Functions
     void NavigationButtonsSet()
     {
-        //
         foreach(Button b in navigationButtons)
         {
             b.interactable = navigation;
         }
     }
+
+    void KeyboardMovement()
+    {
+        if (!navigation) return;
+        if(Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.R))
+        {
+            OnButtonClick("next");
+        }
+        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.E))
+        {
+            OnButtonClick("prev");
+        }
+        if (Input.GetKeyDown(KeyCode.Q) && buttonKeep.interactable)
+        {
+            OnButtonClick("keep");
+        }
+        if (Input.GetKeyDown(KeyCode.W) && buttonFilter.interactable)
+        {
+            OnButtonClick("filter");
+        }
+
+    }
+
+    void StatusTextUpdater()
+    {
+        if (files.Count == 0) textCurrentlyShowing.text = "0 / 0";
+        else textCurrentlyShowing.text = "" + (currentIndex) + " / " + (files.Count - 1);
+        float filtered = 0f;
+        foreach(ImageData img in Data.act.imageData)
+        {
+            if (img.filtered) filtered++;
+        }
+        float percentage = Mathf.Round((filtered / Data.act.imageData.Count) * 10000f) / 100f;
+        textFilteredComparation.text = "" + filtered + " / " + Data.act.imageData.Count;
+        textFilteredPercent.text = "" + percentage + "%";
+
+    }
+    //---------------------------------------------------------------------------
+    void FilteringButtonsSet(bool value)
+    {
+        foreach(Button b in filteringButtons)
+        {
+            b.interactable = value;
+        }
+    }
+
+
 
     public void DefaultURLs()
     {
@@ -107,6 +172,7 @@ public class E621_Filterer : GlobalActions
         dropSource.RefreshShownValue();
     }
     
+    //Drop Source Handler
     public void DropSource(int index)
     {
         currentIndex = 0;
@@ -114,7 +180,10 @@ public class E621_Filterer : GlobalActions
         switch (index)
         {
             case 0:
+                imageShow.sprite = imgBlank;
+                LoadImageCancel();
                 navigation = false;
+                FilteringButtonsSet(false);
                 imageShow.sprite = imgBlank;
                 break;
             case 1:
@@ -144,6 +213,7 @@ public class E621_Filterer : GlobalActions
         t.Start();
     }
 
+    //DropSource Handler Thread
     void DropSourceThread()
     {
         bool done = false;
@@ -195,7 +265,15 @@ public class E621_Filterer : GlobalActions
             navigation = true;
 
             //AQUI NECESITA ACTUALIZARZE
+            switch (dropFormat.value)
+            {
+                case 0://IMG
+                    ShowImage();
+                    break;
+                case 1://Webm
 
+                    break;
+            }
             loadingComp.obj.SetActive(false);
             done = true;
 
@@ -203,18 +281,158 @@ public class E621_Filterer : GlobalActions
         while (!done) { }
     }
 
+    //Show image at the preview Thumb....
+    void ShowImage()
+    {
+        LoadImageCancel();
+        DetermineFilterStatus();
+        LoadImage(imgLoading, imgError, imageShow, files[currentIndex], true);
+    }
+
+    void DetermineFilterStatus()
+    {
+        ImageData temp = Data.act.imageData.Where(tempo => tempo.filename == Path.GetFileName(files[currentIndex])).SingleOrDefault();
+        if (temp != null)
+        {
+            if (temp.filtered)
+            {
+                buttonKeep.interactable = true;
+                buttonFilter.interactable = false;
+            }
+            else
+            {
+                buttonKeep.interactable = false;
+                buttonFilter.interactable = true;
+            }
+            buttonDeleteData.interactable = true;
+        }
+        else
+        {
+            buttonKeep.interactable = true;
+            buttonFilter.interactable = true;
+            buttonDeleteData.interactable = false;
+        }
+    }
+
+    //All button interactions
     public void OnButtonClick(string action)
     {
+        //variables that filter/keep/deleteData handle
+        string filename = "";
+        ImageData oldData = null;
+        ImageData newData = null;
+        int newID = 0;
+        string _newID = "";
+        //----------------------------
+
         switch (action)
         {
+            //Navigation
+            case "next":
+                currentIndex++;
+                if (currentIndex >= files.Count) currentIndex = 0;
+                switch (dropFormat.value)
+                {
+                    case 0://img
+                        ShowImage();
+                        break;
+                    case 1://webm
+
+                        break;
+                }
+                break;
+            case "prev":
+                currentIndex--;
+                if (currentIndex < 0) currentIndex = files.Count-1;
+                switch (dropFormat.value)
+                {
+                    case 0://img
+                        ShowImage();
+                        break;
+                    case 1://webm
+
+                        break;
+                }
+                break;
+            case "openInPage":
+                OpenInPage(files[currentIndex]);
+                break;
+            //Filtering
+            case "filter":
+                filename = Path.GetFileName(files[currentIndex]);
+                oldData = Data.act.imageData.Where(data => data.filename == filename).SingleOrDefault();
+                if(oldData != null)
+                {
+                    Data.act.imageData.Remove(oldData);
+                    print("Detected old data and removed it");
+                }
+                newID = 0;
+                if (filename.Contains("-"))
+                {
+                    _newID = filename.Substring(0, filename.IndexOf("-"));
+                    newID = int.Parse(_newID);
+                }
+
+                newData = new ImageData("E621", newID, filename, true);
+                Data.act.imageData.Add(newData);
+
+                DetermineFilterStatus();
+                break;
+            case "keep":
+                filename = Path.GetFileName(files[currentIndex]);
+                oldData = Data.act.imageData.Where(data => data.filename == filename).SingleOrDefault();
+                if (oldData != null)
+                {
+                    Data.act.imageData.Remove(oldData);
+                    print("Detected old data and removed it");
+                }
+                newID = 0;
+                if (filename.Contains("-"))
+                {
+                    _newID = filename.Substring(0, filename.IndexOf("-"));
+                    newID = int.Parse(_newID);
+                }
+
+                newData = new ImageData("E621", newID, filename, false);
+                Data.act.imageData.Add(newData);
+
+                DetermineFilterStatus();
+                break;
+            case "deleteData":
+                filename = Path.GetFileName(files[currentIndex]);
+                oldData = Data.act.imageData.Where(data => data.filename == filename).SingleOrDefault();
+                if (oldData != null)
+                {
+                    Data.act.imageData.Remove(oldData);
+                    print("Detected old data and removed it");
+                }
+                DetermineFilterStatus();
+                break;
+            //Others
+            case "save":
+                CreateAdvice("Are you sure you want to Override ImageData.DATA?",0,
+                    () =>
+                    {
+                        Data.act.SaveData("imageData");
+                        CreateAdvice("'ImageData.DATA' succesfully Overwritten!");
+                    });
+                break;
             case "configApply":
                 ValidateURLs(true);
+                dropSource.value = 0;
+                dropSource.RefreshShownValue();
                 break;
             case "configCancel":
                 DefaultURLs();
                 break;
             case "return":
+                LoadImageCancel();
+                imageShow.sprite = imgBlank;
+                Resources.UnloadUnusedAssets();
                 SceneManager.LoadSceneAsync("E621_MainMenu");
+                break;
+            default:
+                CreateAdvice("Warning!", "The selected button is not labeled right!");
                 break;
         }
     }

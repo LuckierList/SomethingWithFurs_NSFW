@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Threading;
+using UnityEngine.Networking;
+using UnityEngine.UI;
+using System.IO;
 
 public class GlobalActions : MonoBehaviour
 {
@@ -20,6 +23,11 @@ public class GlobalActions : MonoBehaviour
     [HideInInspector]
     public bool loadingWait;
 
+    //Load Image CTRL!!!
+    Coroutine loadImageCO;
+    Texture2D newTexture;
+    Sprite newSprite;
+
     // Use this for initialization
     public virtual void Awake()
     {
@@ -27,13 +35,13 @@ public class GlobalActions : MonoBehaviour
         adviceComp = GameObject.FindGameObjectWithTag("Advice").GetComponent<AdviceComponents>();
         loadingComp = GameObject.FindGameObjectWithTag("Loading").GetComponent<LoadingComponents>();
         UnityThread.initUnityThread();
-	}
-	
-	// Update is called once per frame
-	void Update ()
+    }
+
+    // Update is called once per frame
+    void Update()
     {
-		
-	}
+
+    }
 
     //-----------------------------------------------------------
     //Advice Controls
@@ -84,7 +92,7 @@ public class GlobalActions : MonoBehaviour
         functionConfirm = actionConfirm;
         functionDeny = actionDeny;
 
-        if(actionConfirm == null)
+        if (actionConfirm == null)
         {
             usedBox.buttonYes.gameObject.SetActive(false);
             usedBox.buttonNo.gameObject.SetActive(false);
@@ -122,7 +130,7 @@ public class GlobalActions : MonoBehaviour
         loadingComp.message.text = newTitle;
         loadingComp.obj.SetActive(true);
     }
-    
+
     public void UpdateLoadingValue(float value)
     {
         loadingComp.slider.value = value;
@@ -145,5 +153,81 @@ public class GlobalActions : MonoBehaviour
         }
         yield return null;
     }
+    //-----------------------------------------------------------
+
+    //-----------------------------------------------------------
+    //Load images
+
+    public void LoadImage(Sprite imgLoading, Sprite imgError, Image image, string imageURL, bool clear = false)
+    {
+        LoadImageCancel();
+        loadImageCO = StartCoroutine(ShowImageCorroutine(imgLoading, imgError, image, imageURL, clear));
+    }
+    public void LoadImageCancel()
+    {
+        if(loadImageCO != null)
+        {
+            StopCoroutine(loadImageCO);
+            loadImageCO = null;
+        }
+    }
+
+    /// <summary>
+    /// Load the image from a URL in the disk.
+    /// </summary>
+    /// <param name="imgLoading"></param>
+    /// <param name="imgError"></param>
+    /// <param name="image"></param>
+    /// <param name="imageURL"></param>
+    /// <param name="clear">When the load is complete, delete the unused Assets (Crashes if you are loading another image and do the cleanse)</param>
+    /// <returns></returns>
+    IEnumerator ShowImageCorroutine(Sprite imgLoading, Sprite imgError, Image image, string imageURL, bool clear)
+    {
+        
+        yield return null;
+        image.sprite = imgLoading;
+        if (!File.Exists(imageURL))
+        {
+            GetComponent<Button>().interactable = false;
+            image.sprite = imgError;
+        }
+        else
+        {
+            using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture("file://" + imageURL))
+            {
+                yield return uwr.SendWebRequest();
+                if (uwr.isNetworkError || uwr.isHttpError)
+                {
+                    Debug.Log(uwr.error);
+                }
+                else
+                {
+                    newTexture = DownloadHandlerTexture.GetContent(uwr);
+                    newSprite = Sprite.Create(newTexture, new Rect(0f, 0f, newTexture.width, newTexture.height), new Vector2(.5f, .5f), 100f);
+                    image.sprite = newSprite;
+                    if(clear) Resources.UnloadUnusedAssets();
+                }
+            }
+        }
+        loadImageCO = null;
+    }
+
+    //-----------------------------------------------------------
+
+    //-----------------------------------------------------------
+    //Misc.
+    public void OpenInPage(string url)
+    {
+        string filenameNoExtension = Path.GetFileNameWithoutExtension(url);
+
+        //Prevenir signo "-"; antes de este signo, viene la ID de la imagen, se lo quito para el código MD5, la ID se obtendrá
+        //desde el HTML descargado.
+        if (filenameNoExtension.Contains("-"))
+        {
+            filenameNoExtension = filenameNoExtension.Substring((filenameNoExtension.IndexOf("-") + 1), filenameNoExtension.Length - (filenameNoExtension.IndexOf("-") + 1));
+        }
+        Application.OpenURL("https://e621.net/post/index/1/md5:" + filenameNoExtension);
+    }
+
     //-----------------------------------------------------------
 }
