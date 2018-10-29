@@ -44,6 +44,7 @@ public class E621_Filterer : GlobalActions
 
     void NavigationButtonsSet()
     {
+        //
         foreach(Button b in navigationButtons)
         {
             b.interactable = navigation;
