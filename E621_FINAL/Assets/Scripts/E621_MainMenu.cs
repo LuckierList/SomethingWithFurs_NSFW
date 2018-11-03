@@ -146,7 +146,7 @@ public class E621_MainMenu : GlobalActions
             Thread t = new Thread(new ThreadStart(ConvertOldDataThread));
             t.Start();
         }
-        else print("Failed to load Images.dat and ImagesFilter.dat");
+        else CreateAdvice("Failed to load Images.dat and ImagesFilter.dat");
     }
 
     void ConvertOldDataThread()

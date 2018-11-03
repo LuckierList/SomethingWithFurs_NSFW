@@ -5,6 +5,7 @@ using System.Threading;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using System.IO;
+using UnityEngine.Video;
 
 public class GlobalActions : MonoBehaviour
 {
@@ -24,7 +25,7 @@ public class GlobalActions : MonoBehaviour
     public bool loadingWait;
 
     //Load Image CTRL!!!
-    Coroutine loadImageCO;
+    Coroutine loadImageCO, loadWebmCO;
     Texture2D newTexture;
     Sprite newSprite;
 
@@ -164,9 +165,10 @@ public class GlobalActions : MonoBehaviour
         LoadImageCancel();
         loadImageCO = StartCoroutine(ShowImageCorroutine(imgLoading, imgError, image, imageURL, clear));
     }
+
     public void LoadImageCancel()
     {
-        if(loadImageCO != null)
+        if (loadImageCO != null)
         {
             StopCoroutine(loadImageCO);
             loadImageCO = null;
@@ -184,7 +186,7 @@ public class GlobalActions : MonoBehaviour
     /// <returns></returns>
     IEnumerator ShowImageCorroutine(Sprite imgLoading, Sprite imgError, Image image, string imageURL, bool clear)
     {
-        
+
         yield return null;
         image.sprite = imgLoading;
         if (!File.Exists(imageURL))
@@ -206,7 +208,7 @@ public class GlobalActions : MonoBehaviour
                     newTexture = DownloadHandlerTexture.GetContent(uwr);
                     newSprite = Sprite.Create(newTexture, new Rect(0f, 0f, newTexture.width, newTexture.height), new Vector2(.5f, .5f), 100f);
                     image.sprite = newSprite;
-                    if(clear) Resources.UnloadUnusedAssets();
+                    if (clear) Resources.UnloadUnusedAssets();
                 }
             }
         }
@@ -214,11 +216,57 @@ public class GlobalActions : MonoBehaviour
     }
 
     //-----------------------------------------------------------
+    //Load Webm
+    public void LoadWebm(Sprite imgLoading, Sprite imgError, RawImage image, RenderTexture renderTexture, VideoPlayer videoPlayer ,string webmUrl)
+    {
+        LoadWebmCancel();
+        loadWebmCO = StartCoroutine(ShowWebmCorroutine(imgLoading, imgError, image, renderTexture, videoPlayer, webmUrl));
+    }
+
+    public void LoadWebmCancel()
+    {
+        if (loadWebmCO != null)
+        {
+            StopCoroutine(loadWebmCO);
+            loadWebmCO = null;
+        }
+    }
+
+    IEnumerator ShowWebmCorroutine(Sprite imgLoading, Sprite imgError, RawImage image, RenderTexture renderTexture, VideoPlayer videoPlayer, string webmUrl)
+    {
+        yield return null;
+        print("Entered");
+        //texterror
+        image.texture = imgLoading.texture;
+        //objError.SetActive(false);
+        videoPlayer.url = webmUrl;
+        //videoPlayer.errorRecieved += ShowWebmError;
+        videoPlayer.Prepare();
+        //print("Preparing");
+        //while (!videoPlayer.isPrepared) yield return null;
+        print("Worked");
+        videoPlayer.Play();
+        image.texture = renderTexture;
+        print("ShouldPlay");
+        loadWebmCO= null;
+    }
+
+    void ShowWebmError(VideoPlayer source, string message)
+    {
+        //TEXT.text += message;
+        //objError.SetACtive(true);
+        //videoPlayer.ErrorRecieved -= ShowWebmError;
+    }
+
+    //-----------------------------------------------------------
+
+    //-----------------------------------------------------------
 
     //-----------------------------------------------------------
     //Misc.
-    public void OpenInPage(string url)
+    public void OpenInPageE621(string url)
     {
+        print("nani");
         string filenameNoExtension = Path.GetFileNameWithoutExtension(url);
 
         //Prevenir signo "-"; antes de este signo, viene la ID de la imagen, se lo quito para el código MD5, la ID se obtendrá
@@ -229,6 +277,7 @@ public class GlobalActions : MonoBehaviour
         }
         Application.OpenURL("https://e621.net/post/index/1/md5:" + filenameNoExtension);
     }
+
 
     //-----------------------------------------------------------
 }

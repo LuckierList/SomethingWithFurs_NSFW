@@ -7,7 +7,6 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 public class Data : MonoBehaviour
 {
-
     public static Data act;
     [HideInInspector]
     public List<ImageData> imageData;
@@ -33,6 +32,10 @@ public class Data : MonoBehaviour
         print("Reloaded All Data");
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="type">imageData, </param>
     public void LoadData(string type)
     {
         BinaryFormatter bf = new BinaryFormatter();
@@ -60,6 +63,10 @@ public class Data : MonoBehaviour
         SaveData("imageData");
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="type">imageData, </param>
     public void SaveData(string type)
     {
         BinaryFormatter bf = new BinaryFormatter();

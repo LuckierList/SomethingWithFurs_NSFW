@@ -7,20 +7,31 @@ using UnityEngine.Video;
 using UnityEngine.SceneManagement;
 using System.IO;
 using System.Threading;
+using UnityEngine.Video;
 
 public class E621_Filterer : GlobalActions
 {
     List<Button> navigationButtons;
     List<Button> filteringButtons;
 
-    public InputField inputStraight, inputDickgirl, inputIntersex, inputHerm;
-    public Dropdown dropSource, dropFormat;
+    [Header("URLs Sources")]
+    public InputField inputStraight;
+    public InputField inputDickgirl, inputIntersex, inputHerm;
+    [Header("Sources Ctrl")]
+    public Dropdown dropSource;
+    public Dropdown dropFormat;
     public Button buttonKeep, buttonFilter, buttonDeleteData, buttonNext, buttonPrev, buttonOpenInPage, buttonMoveToFolder, buttonSave;
-
-    public Sprite imgBlank, imgLoading, imgError;
+    [Header("Shower Components")]
+    public Sprite imgBlank;
+    public Sprite imgLoading, imgError;
     public Image imageShow;
-
-    public Text textCurrentlyShowing, textFilteredComparation, textFilteredPercent;
+    public RenderTexture webmRender;
+    public RawImage webmShow;
+    public VideoPlayer webmPlayer;
+    public GameObject objImageViewer, objWebmViewer;
+    [Header("Other")]
+    public Text textCurrentlyShowing;
+    public Text textFilteredComparation, textFilteredPercent;
 
     int currentIndex = 0;
     [HideInInspector]
@@ -93,7 +104,7 @@ public class E621_Filterer : GlobalActions
 
     void StatusTextUpdater()
     {
-        if (files.Count == 0) textCurrentlyShowing.text = "0 / 0";
+        if (files.Count == 0 || dropSource.value == 0) textCurrentlyShowing.text = "0 / 0";
         else textCurrentlyShowing.text = "" + (currentIndex) + " / " + (files.Count - 1);
         float filtered = 0f;
         foreach(ImageData img in Data.act.imageData)
@@ -177,6 +188,8 @@ public class E621_Filterer : GlobalActions
     {
         currentIndex = 0;
         sourceURL = "";
+        objImageViewer.SetActive(false);
+        objWebmViewer.SetActive(false);
         switch (index)
         {
             case 0:
@@ -268,10 +281,14 @@ public class E621_Filterer : GlobalActions
             switch (dropFormat.value)
             {
                 case 0://IMG
+                    objImageViewer.SetActive(true);
+                    objWebmViewer.SetActive(false);
                     ShowImage();
                     break;
                 case 1://Webm
-
+                    objImageViewer.SetActive(false);
+                    objWebmViewer.SetActive(true);
+                    ShowWebm();
                     break;
             }
             loadingComp.obj.SetActive(false);
@@ -287,6 +304,14 @@ public class E621_Filterer : GlobalActions
         LoadImageCancel();
         DetermineFilterStatus();
         LoadImage(imgLoading, imgError, imageShow, files[currentIndex], true);
+    }
+
+    //Show Webm at the preview Thumb...
+    void ShowWebm()
+    {
+        LoadWebmCancel();
+        DetermineFilterStatus();
+        LoadWebm(imgLoading, imgError, webmShow, webmRender, webmPlayer, files[currentIndex]);
     }
 
     void DetermineFilterStatus()
@@ -315,6 +340,7 @@ public class E621_Filterer : GlobalActions
         }
     }
 
+
     //All button interactions
     public void OnButtonClick(string action)
     {
@@ -338,25 +364,25 @@ public class E621_Filterer : GlobalActions
                         ShowImage();
                         break;
                     case 1://webm
-
+                        ShowWebm();
                         break;
                 }
                 break;
             case "prev":
                 currentIndex--;
-                if (currentIndex < 0) currentIndex = files.Count-1;
+                if (currentIndex < 0) currentIndex = files.Count - 1;
                 switch (dropFormat.value)
                 {
                     case 0://img
                         ShowImage();
                         break;
                     case 1://webm
-
+                        ShowWebm();
                         break;
                 }
                 break;
             case "openInPage":
-                OpenInPage(files[currentIndex]);
+                OpenInPageE621 (files[currentIndex]);
                 break;
             //Filtering
             case "filter":
@@ -432,9 +458,64 @@ public class E621_Filterer : GlobalActions
                 Resources.UnloadUnusedAssets();
                 SceneManager.LoadSceneAsync("E621_MainMenu");
                 break;
+            case "moveToFolder":
+                CreateAdvice("Move current Kept/Filtered Images/Videos to their folders?", 0, () =>
+                {
+                    LoadingReset("Moving the Images/Videos...");
+                    Thread t = new Thread(new ThreadStart(MoveToFolderImage));
+                    t.Start();
+                });
+                break;
             default:
                 CreateAdvice("Warning!", "The selected button is not labeled right!");
                 break;
         }
+    }
+
+    void MoveToFolderImage()
+    {
+        string goodUrl = sourceURL + "/Good";
+        string filterUrl = sourceURL + "/Filtered";
+        float cont = 0;
+        foreach(ImageData data in Data.act.imageData)
+        {
+            UnityThread.executeInUpdate(() =>
+            {
+                UpdateLoadingValue(cont/Data.act.imageData.Count);
+            });
+            if(File.Exists(sourceURL + "/" + data.filename))
+            {
+                if ((Path.GetExtension(sourceURL + "/" + data.filename) == ".png" ||
+                Path.GetExtension(sourceURL + "/" + data.filename) == ".jpg") &&
+                !File.Exists(goodUrl + "/" + data.filename) &&
+                File.Exists(sourceURL + "/" + data.filename))
+                {
+                    if(!data.filtered)
+                        File.Move(sourceURL + "/" + data.filename, goodUrl + "/" + data.filename);
+                    else
+                        File.Move(sourceURL + "/" + data.filename, filterUrl + "/" + data.filename);
+                }
+                else
+                {
+                    print("Image didn'texist. WUT?");
+                    //Exceptions
+                }
+                
+            }
+            cont++;
+        }
+        bool done = false;
+        UnityThread.executeInUpdate(() =>
+        {
+            loadingComp.obj.SetActive(false);
+            dropSource.value = 0;
+            dropSource.RefreshShownValue();
+            CreateAdvice("Image/Video moved! Would you like to save?",0, ()=>
+            {
+                Data.act.SaveData("imageData");
+            });
+            done = true;
+        });
+        while (!done) { }
     }
 }
