@@ -234,28 +234,32 @@ public class GlobalActions : MonoBehaviour
 
     IEnumerator ShowWebmCorroutine(Sprite imgLoading, Sprite imgError, RawImage image, RenderTexture renderTexture, VideoPlayer videoPlayer, string webmUrl)
     {
+
         yield return null;
         print("Entered");
         //texterror
         image.texture = imgLoading.texture;
         //objError.SetActive(false);
+        //textError.text = "";
         videoPlayer.url = webmUrl;
-        //videoPlayer.errorRecieved += ShowWebmError;
+        videoPlayer.errorReceived += WebmError;
         videoPlayer.Prepare();
-        //print("Preparing");
-        //while (!videoPlayer.isPrepared) yield return null;
+        print("Preparing");
+        while (!videoPlayer.isPrepared)
+        {
+            yield return null;
+        }
         print("Worked");
         videoPlayer.Play();
         image.texture = renderTexture;
         print("ShouldPlay");
-        loadWebmCO= null;
+        videoPlayer.errorReceived -= WebmError;
+        loadWebmCO = null;
     }
 
-    void ShowWebmError(VideoPlayer source, string message)
+    void WebmError(VideoPlayer source, string message)
     {
-        //TEXT.text += message;
-        //objError.SetACtive(true);
-        //videoPlayer.ErrorRecieved -= ShowWebmError;
+        CreateAdvice("Error in Webm", message);
     }
 
     //-----------------------------------------------------------

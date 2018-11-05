@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
@@ -7,7 +6,6 @@ using UnityEngine.Video;
 using UnityEngine.SceneManagement;
 using System.IO;
 using System.Threading;
-using UnityEngine.Video;
 
 public class E621_Filterer : GlobalActions
 {
@@ -20,7 +18,7 @@ public class E621_Filterer : GlobalActions
     [Header("Sources Ctrl")]
     public Dropdown dropSource;
     public Dropdown dropFormat;
-    public Button buttonKeep, buttonFilter, buttonDeleteData, buttonNext, buttonPrev, buttonOpenInPage, buttonMoveToFolder, buttonSave;
+    public Button buttonKeep, buttonFilter, buttonDeleteData, buttonNext, buttonPrev, buttonOpenInPage, buttonMoveToFolder, buttonSave, buttonOpenSource, buttonOpenInSource;
     [Header("Shower Components")]
     public Sprite imgBlank;
     public Sprite imgLoading, imgError;
@@ -29,6 +27,9 @@ public class E621_Filterer : GlobalActions
     public RawImage webmShow;
     public VideoPlayer webmPlayer;
     public GameObject objImageViewer, objWebmViewer;
+    public Slider sliderVideoProgress, sliderVolume;
+    public Toggle toggleMute;
+
     [Header("Other")]
     public Text textCurrentlyShowing;
     public Text textFilteredComparation, textFilteredPercent;
@@ -50,6 +51,8 @@ public class E621_Filterer : GlobalActions
         navigationButtons.Add(buttonPrev);
         navigationButtons.Add(buttonOpenInPage);
         navigationButtons.Add(buttonMoveToFolder);
+        navigationButtons.Add(buttonOpenSource);
+        navigationButtons.Add(buttonOpenInSource);
         //navigationButtons.Add(buttonSave);
 
         filteringButtons = new List<Button>();
@@ -67,6 +70,7 @@ public class E621_Filterer : GlobalActions
     private void Update()
     {
         StatusTextUpdater();
+        VideoFunctions();
         NavigationButtonsSet();
         KeyboardMovement();
     }
@@ -116,6 +120,18 @@ public class E621_Filterer : GlobalActions
         textFilteredPercent.text = "" + percentage + "%";
 
     }
+
+    void VideoFunctions()
+    {
+        if (webmPlayer.isPlaying)
+            sliderVideoProgress.value = ((float)webmPlayer.frame / webmPlayer.frameCount);
+        else
+            sliderVideoProgress.value = 0f;
+
+        webmPlayer.GetComponent<AudioSource>().mute = toggleMute.isOn;
+        webmPlayer.GetComponent<AudioSource>().volume = sliderVolume.value;
+    }
+
     //---------------------------------------------------------------------------
     void FilteringButtonsSet(bool value)
     {
@@ -298,6 +314,10 @@ public class E621_Filterer : GlobalActions
         while (!done) { }
     }
 
+    public void DropFormatHandler()
+    {
+        DropSource(dropSource.value);
+    }
     //Show image at the preview Thumb....
     void ShowImage()
     {
@@ -384,6 +404,12 @@ public class E621_Filterer : GlobalActions
             case "openInPage":
                 OpenInPageE621 (files[currentIndex]);
                 break;
+            case "openSource":
+                Application.OpenURL(sourceURL);
+                break;
+            case "openFromSource":
+                Application.OpenURL("file://" + files[currentIndex]);
+                break;
             //Filtering
             case "filter":
                 filename = Path.GetFileName(files[currentIndex]);
@@ -462,7 +488,16 @@ public class E621_Filterer : GlobalActions
                 CreateAdvice("Move current Kept/Filtered Images/Videos to their folders?", 0, () =>
                 {
                     LoadingReset("Moving the Images/Videos...");
-                    Thread t = new Thread(new ThreadStart(MoveToFolderImage));
+                    Thread t = null;// = new Thread(new ThreadStart(MoveToFolderImage));
+                    switch (dropFormat.value)
+                    {
+                        case 0://img
+                            t = new Thread(new ThreadStart(MoveToFolderImage));
+                            break;
+                        case 1://webm
+                            t = new Thread(new ThreadStart(MoveToFolderWebm));
+                            break;
+                    }
                     t.Start();
                 });
                 break;
@@ -497,7 +532,8 @@ public class E621_Filterer : GlobalActions
                 }
                 else
                 {
-                    print("Image didn'texist. WUT?");
+                    //CreateAdvice("Image didn't exist. WUT?");
+                    print("Image didn't extist, WUT?");
                     //Exceptions
                 }
                 
@@ -510,7 +546,54 @@ public class E621_Filterer : GlobalActions
             loadingComp.obj.SetActive(false);
             dropSource.value = 0;
             dropSource.RefreshShownValue();
-            CreateAdvice("Image/Video moved! Would you like to save?",0, ()=>
+            CreateAdvice("Images moved! Would you like to save?",0, ()=>
+            {
+                Data.act.SaveData("imageData");
+            });
+            done = true;
+        });
+        while (!done) { }
+    }
+
+    void MoveToFolderWebm()
+    {
+        string goodUrl = sourceURL + "/VidsGood";
+        string filterUrl = sourceURL + "/VidsFiltered";
+        float cont = 0;
+        foreach (ImageData data in Data.act.imageData)
+        {
+            UnityThread.executeInUpdate(() =>
+            {
+                UpdateLoadingValue(cont / Data.act.imageData.Count);
+            });
+            if (File.Exists(sourceURL + "/" + data.filename))
+            {
+                if (Path.GetExtension(sourceURL + "/" + data.filename) == ".webm" &&
+                !File.Exists(goodUrl + "/" + data.filename) &&
+                File.Exists(sourceURL + "/" + data.filename))
+                {
+                    if (!data.filtered)
+                        File.Move(sourceURL + "/" + data.filename, goodUrl + "/" + data.filename);
+                    else
+                        File.Move(sourceURL + "/" + data.filename, filterUrl + "/" + data.filename);
+                }
+                else
+                {
+                    //CreateAdvice("Webm didn'texist. WUT?");
+                    print("Webm didn't extist, WUT?");
+                    //Exceptions
+                }
+
+            }
+            cont++;
+        }
+        bool done = false;
+        UnityThread.executeInUpdate(() =>
+        {
+            loadingComp.obj.SetActive(false);
+            dropSource.value = 0;
+            dropSource.RefreshShownValue();
+            CreateAdvice("Videos moved! Would you like to save?", 0, () =>
             {
                 Data.act.SaveData("imageData");
             });
