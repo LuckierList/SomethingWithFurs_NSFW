@@ -6,6 +6,7 @@ using UnityEngine.Networking;
 using UnityEngine.UI;
 using System.IO;
 using UnityEngine.Video;
+using UnityEngine.SceneManagement;
 
 public class GlobalActions : MonoBehaviour
 {
@@ -191,6 +192,7 @@ public class GlobalActions : MonoBehaviour
         image.sprite = imgLoading;
         if (!File.Exists(imageURL))
         {
+            if(GetComponent<Button>() != null)
             GetComponent<Button>().interactable = false;
             image.sprite = imgError;
         }
@@ -282,6 +284,43 @@ public class GlobalActions : MonoBehaviour
         Application.OpenURL("https://e621.net/post/index/1/md5:" + filenameNoExtension);
     }
 
+    public void OpenSceneAsync(string scene)
+    {
+        switch (scene)
+        {
+            case "mainMenu":
+                SceneManager.LoadSceneAsync("E621_MainMenu");
+                break;
+            case "gallery":
+                CreateAdvice("The gallery has not been implemented yet.");
+                break;
+            case "comic":
+                CreateAdvice("The comic gallery has not been implemented yet.");
+                break;
+            case "video":
+                CreateAdvice("The video gallery has not been implemented yet.");
+                break;
+            case "game":
+                CreateAdvice("The game has not been implemented yet.");
+                break;
+            case "character":
+                SceneManager.LoadSceneAsync("E621_Character");
+                break;
+            case "artist":
+                CreateAdvice("The artist has not been implemented yet.");
+                break;
+            case "filter":
+                //CreateAdvice("The filterer has not been implemented yet.");
+                SceneManager.LoadSceneAsync("E621_Filterer");
+                break;
+            case "database":
+                CreateAdvice("The database editor has not been implemented yet.");
+                break;
+            default:
+                CreateAdvice("What the...?", "Something went horribly wrong here...");
+                break;
+        }
+    }
 
     //-----------------------------------------------------------
 }

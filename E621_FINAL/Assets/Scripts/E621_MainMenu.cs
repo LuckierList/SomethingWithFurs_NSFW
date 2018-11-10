@@ -89,32 +89,17 @@ public class E621_MainMenu : GlobalActions
         switch (type)
         {
             case "gallery":
-                CreateAdvice("The gallery has not been implemented yet.");
-                break;
             case "comic":
-                CreateAdvice("The comic gallery has not been implemented yet.");
-                break;
             case "video":
-                CreateAdvice("The video gallery has not been implemented yet.");
-                break;
             case "game":
-                CreateAdvice("The game has not been implemented yet.");
-                break;
             case "character":
-                CreateAdvice("The character has not been implemented yet.");
-                break;
             case "artist":
-                CreateAdvice("The artist has not been implemented yet.");
-                break;
             case "filter":
-                //CreateAdvice("The filterer has not been implemented yet.");
-                SceneManager.LoadSceneAsync("E621_Filterer");
+            case "database":
+                OpenSceneAsync(type);
                 break;
             case "page":
                 Application.OpenURL("https://e621.net/post");
-                break;
-            case "database":
-                CreateAdvice("The database editor has not been implemented yet.");
                 break;
             case "saveAll":
                 CreateAdvice("Warning!", "Data loss is a risk if you are not sure if you need to save ALL the types of data. It's recommended to go to that section you want to save and do it from there. Still, continue?", 1, Data.act.SaveAllData);

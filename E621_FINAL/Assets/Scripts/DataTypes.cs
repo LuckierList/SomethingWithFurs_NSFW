@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-using System.Linq;
+using System.IO;
 
 [Serializable]
 public class ImageData
@@ -29,5 +29,23 @@ public class ImageData
         tags = new List<string>();
         filename = _filename;
         filtered = _filtered;
+    }
+}
+
+[Serializable]
+public class E621CharacterData
+{
+    public string tagName;
+    public string urlSmall;
+    public string urlBig = "";
+    public bool[] booleans = new bool[13];
+    public int animated = 0, fetish = 0, quality = 0;
+    public bool edited = false;
+
+    public E621CharacterData(string _tagName, string _urlSource)
+    {
+        tagName = _tagName;
+        urlSmall = _urlSource;
+
     }
 }

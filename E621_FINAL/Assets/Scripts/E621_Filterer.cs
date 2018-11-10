@@ -103,6 +103,10 @@ public class E621_Filterer : GlobalActions
         {
             OnButtonClick("filter");
         }
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            OnButtonClick("openFromSource");
+        }
 
     }
 

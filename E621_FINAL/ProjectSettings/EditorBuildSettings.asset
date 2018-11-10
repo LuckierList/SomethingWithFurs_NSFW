@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/E621/E621_Filterer.unity
     guid: 3aed2440ad9d4ec49b6f64fb3f29ba44
+  - enabled: 1
+    path: Assets/Scenes/E621/E621_Character.unity
+    guid: f01cb767dade1884e8ab67e335129105
   m_configObjects: {}
