@@ -9,7 +9,8 @@ using System.Linq;
 public class E621_Characters : GlobalActions
 {
     public static E621_Characters act;
-
+    public int[] buttonSizesValue;
+    public int[] buttonSizesQuantity;
     [HideInInspector]
     public string[] files;
     [HideInInspector]
@@ -25,8 +26,9 @@ public class E621_Characters : GlobalActions
 
     [Header("Main")]
     public GameObject prefabCharButton;
-    public Dropdown dropFilterAdd, dropFilterRemove, dropViewerSize;
-    public InputField inputSource, inputFilterAdd;
+    public Dropdown dropFilter, dropViewerSize;
+    public Toggle toggleFilter;
+    public InputField inputSource;
     public GameObject objViewer, objEditor, objGridParent;
     public Button buttonNext, buttonPrev, buttonFirst, buttonLast;
     public GridLayoutGroup gridButtons;
@@ -44,8 +46,14 @@ public class E621_Characters : GlobalActions
     {
         base.Awake();
         inputSource.text = PlayerPrefs.GetString("E621_CharacterSource");
+        ButtonSizeManager(1, false);
         ButtonAction("configApply");
         act = this;
+    }
+
+    private void Start()
+    {
+        ButtonSizeManager(dropViewerSize.value);
     }
 
     // Update is called once per frame
@@ -67,13 +75,29 @@ public class E621_Characters : GlobalActions
         */
         //Hacer los filtros-------
         //showFiles = files.ToList();
-        foreach(string s in files)
+        int filterIndex = dropFilter.value -1;
+        foreach (string s in files)
         {
             if (s.Contains("desktop")) continue;
-            showFiles.Add(s);
+            if(filterIndex == -1)
+                showFiles.Add(s);
+            else
+            {
+                E621CharacterData loaded = Data.act.e621CharacterData.Where(
+                    temp => temp.tagName == Path.GetFileNameWithoutExtension(s)).SingleOrDefault();
+                if (loaded != null)
+                {
+                    if(loaded.booleans[filterIndex])
+                        showFiles.Add(s);
+                    
+                }
+                else if (loaded == null && toggleFilter.isOn)
+                    showFiles.Add(s);
+            }
         }
         showFilesUnedited = filesUnedited.ToList();
         //------------------------
+        currentPage = 0;
         ShowPage(currentPage);
         SetNavigationButtons(true, false, true, false);
     }
@@ -125,7 +149,7 @@ public class E621_Characters : GlobalActions
                 ShowPage(currentPage);
                 break;
             case "last":
-                currentPage = (showFiles.Count/ imagesPerPage);
+                currentPage = showFiles.Count / imagesPerPage;
                 SetNavigationButtons(false, true, false, true);
                 ShowPage(currentPage);
                 break;
@@ -175,6 +199,12 @@ public class E621_Characters : GlobalActions
                 objViewer.SetActive(true);
                 ShowPage(currentPage);
                 break;
+            case "openInPage":
+                Application.OpenURL("https://e621.net/post/index/1/"+loadedData.tagName);
+                break;
+            case "openSource":
+                Application.OpenURL(inputSource.text);
+                break;
         }
     }
     //Viewer
@@ -203,8 +233,13 @@ public class E621_Characters : GlobalActions
             b.delay = contDelay;
             b.data = data;
             Instantiate(prefabCharButton, objGridParent.transform);
-            contDelay += 0.1f;
+            contDelay += 0.001f;
         }
+    }
+
+    public void FilterHandler()
+    {
+        CreateFileList();
     }
 
     void ClearGridChilds()
@@ -214,6 +249,25 @@ public class E621_Characters : GlobalActions
         {
             objGridParent.transform.GetChild(i).GetComponent<E621_CharacterButton>().StopThisCoroutine();
             Destroy(objGridParent.transform.GetChild(i).gameObject);
+        }
+    }
+    public void ButtonSizeManager(int value)
+    {
+        ButtonSizeManager(value, true);
+    }
+
+    public void ButtonSizeManager(int value, bool show)
+    {
+        int size = 0, newImagesPerPage = 0;
+        size = buttonSizesValue[value];
+        newImagesPerPage = buttonSizesQuantity[value];
+        gridButtons.cellSize = new Vector2(size, size);
+        imagesPerPage = newImagesPerPage;
+        if(show)
+        {
+            SetNavigationButtons(true, false, true, false);
+            currentPage = 0;
+            ShowPage(0);
         }
     }
 
