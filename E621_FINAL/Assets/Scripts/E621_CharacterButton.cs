@@ -43,8 +43,13 @@ public class E621_CharacterButton : MonoBehaviour
 
     public void SendData()
     {
-        print("oof button");
+        //print("oof button");
         E621_Characters.act.OpenInEditor(data, id, imageThumb.sprite);
+    }
+
+    public void SendDataViewer()
+    {
+        E621_Characters.act.OpenOnViewer(data, id, imageThumb.sprite);
     }
 
     public void StopThisCoroutine()

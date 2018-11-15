@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 
 public class E621_Characters : GlobalActions
@@ -40,6 +41,17 @@ public class E621_Characters : GlobalActions
     public Toggle[] toggles;
     public Dropdown dropAnimated, dropFetish, dropQuality;
     E621CharacterData loadedData;
+    [Header("Viewer")]
+    public GameObject objViewerChars;
+    public Button buttonShowTheirImages;
+    public Toggle toggleErasePrevious;
+    public Text textViewerName, textViewerData, textViewerAppearances;
+    public Image imageViewerPortrait, imageViewerSex;
+    public Color colorGreen, colorRed, colorOrange, colorBlack;
+    [SerializeField]
+    List<string> urlsCharacterSaved = new List<string>();
+    [SerializeField]
+    List<string> urlsCharacterToShow = new List<string>();
 
     // Use this for initialization
     public override void Awake()
@@ -196,6 +208,7 @@ public class E621_Characters : GlobalActions
                 break;
             case "cancel":
                 objEditor.SetActive(false);
+                objViewerChars.SetActive(false);
                 objViewer.SetActive(true);
                 ShowPage(currentPage);
                 break;
@@ -204,6 +217,24 @@ public class E621_Characters : GlobalActions
                 break;
             case "openSource":
                 Application.OpenURL(inputSource.text);
+                break;
+            //Viewer
+            case "showImages":
+                LoadingReset("Creating folder with images of the desired character(s).");
+                Thread t = new Thread(new ThreadStart(ShowImagesInFolderThread));
+                t.Start();
+                
+                break;
+            case "addImages":
+                if (toggleErasePrevious.isOn) urlsCharacterToShow.Clear();
+                foreach(string s in urlsCharacterSaved)
+                {
+                    if (!urlsCharacterToShow.Contains(s))
+                    {
+                        urlsCharacterToShow.Add(s);
+                    }
+                    else print("Existing image skiped");
+                }
                 break;
         }
     }
@@ -304,6 +335,7 @@ public class E621_Characters : GlobalActions
         LoadImage(imgLoading, imgError, imageThumbBig, loadedData.urlBig);
 
         int imageTotal = 0;
+        
         foreach (ImageData a in Data.act.imageData)
         {
             if (a.tags.Contains(Path.GetFileNameWithoutExtension(showFiles[id])))
@@ -316,4 +348,205 @@ public class E621_Characters : GlobalActions
         objViewer.SetActive(false);
         objEditor.SetActive(true);
     }
+
+    //Viewer of Character
+    public void OpenOnViewer(E621CharacterData data, int id, Sprite sprImage)
+    {
+        objViewer.SetActive(false);
+        loadedData = data;
+        ClearGridChilds();
+        textViewerName.text = loadedData.tagName;
+        const string dataFormat = "Categories:\n{0}\nFavorite:\n{1}\nAnimated Appearances:\n{2}\nFetish Worth:\n{3}\nGood & Constant Quality:\n{4}";
+        string categories = "";
+        
+
+        if (data.booleans[1]) categories += "Anthro, ";
+        if (data.booleans[2]) categories += "Mid-Beast, ";
+        if (data.booleans[3]) categories += "Angel, ";
+        if (data.booleans[4]) categories += "Demon, ";
+        if (data.booleans[5]) categories += "Marine, ";
+        if (data.booleans[7]) categories += "Dragon, ";
+        if (data.booleans[8]) categories += "Robot, ";
+        if (data.booleans[9]) categories += "Human, ";
+        if (data.booleans[10]) categories += "Egyptian, ";
+        if (data.booleans[11]) categories += "Other, ";
+        if (categories != "")
+            categories = categories.Substring(0, categories.Length - 2) + ".";
+        else
+            categories = "Not Specified";
+        
+        if (data.booleans[0]) categories += "Female, ";
+        if (data.booleans[6]) categories += "Dickgirl, ";
+        if (!data.booleans[0] && !data.booleans[6])
+            imageViewerSex.color = colorBlack;
+        else if (data.booleans[0] && !data.booleans[6])
+            imageViewerSex.color = colorGreen;
+        else if (!data.booleans[0] && data.booleans[6])
+            imageViewerSex.color = colorRed;
+        else
+            imageViewerSex.color = colorOrange;
+
+        string animated = "";
+        string fetish = "";
+        string quality = "";
+        for (int i = 0; i < 3; i++)
+        {
+            int theInt = 0;
+            if (i == 0) theInt = data.animated;
+            if (i == 1) theInt = data.fetish;
+            if (i == 3) theInt = data.quality;
+            string say = "";
+            switch (theInt)
+            {
+                case 0:
+                    say = "Don't waste your time with this.";
+                    break;
+                case 1:
+                    say = "There is some... Not so much tough.";
+                    break;
+                case 2:
+                    say = "Theres maybe more than usual (50/50?).";
+                    break;
+                case 3:
+                    say = "It's worhty if this is what you seek.";
+                    break;
+                case 4:
+                    say = "Absolutely worth it! Exquisite.";
+                    break;
+            }
+            if (i == 0) animated = say;
+            if (i == 1) fetish = say;
+            if (i == 3) quality = say;
+        }
+
+        textViewerData.text = string.Format(dataFormat, categories, data.booleans[12] ? "Of course." : "Nope.", animated, fetish, quality);
+        int imageTotal = 0;
+        urlsCharacterSaved.Clear();
+        foreach (ImageData a in Data.act.imageData)
+        {
+            if (a.tags.Contains(Path.GetFileNameWithoutExtension(showFiles[id])))
+            {
+                urlsCharacterSaved.Add(a.filename);
+                imageTotal++;
+            }
+        }
+        textViewerAppearances.text = "Appeared '" + imageTotal + "' times.";
+        objViewerChars.SetActive(true);
+    }
+
+    void ShowImagesInFolderThread()
+    {
+        bool done = false;
+        int cont = 0;
+        int added = 0;
+        float contImages = 0;
+        string[] filesOnFolder = null;
+        List<string> filesToShow = null;
+        while (cont < 2)
+        {
+            UnityThread.executeInUpdate(() =>
+            {
+                if (filesToShow == null) filesToShow = new List<string>();
+                LoadingReset("Getting the files from a folder. First is straight, second is dickgirl");
+                StartLoadingWait();
+                
+                done = true;
+            });
+            while (!done) { }
+            done = false;
+            if (cont == 0)
+                filesOnFolder = Directory.GetFiles(@"G:\No pls\e621\Te lo advierto\Straight");
+            if (cont == 1)
+                filesOnFolder = Directory.GetFiles(@"G:\No pls\e621\Te lo advierto\Dickgirl");
+            UnityThread.executeInUpdate(() =>
+            {
+                loadingWait = false;
+                LoadingReset("Searching in the folder images of the desired character(s).");
+                done = true;
+            });
+            while (!done) { }
+            done = false;
+            contImages = 0;
+            for(int i = 0; i < filesOnFolder.Length; i++)
+            {
+                UnityThread.executeInUpdate(() =>
+                {
+                    UpdateLoadingValue(contImages / filesOnFolder.Length, "Searching in the folder images of the desired character(s). Added: " + added);
+                });
+                for(int j = 0; j < urlsCharacterToShow.Count; j++)
+                {
+                    if (filesOnFolder[i].Contains(urlsCharacterToShow[j]))
+                    {
+                        filesToShow.Add(filesOnFolder[i]);
+                        added += 1;
+                    }
+                }
+            }
+            cont += 1;
+        }
+        UnityThread.executeInUpdate(() =>
+        {
+            LoadingReset("Loading the images from the filter folder...");
+            StartLoadingWait();
+        });
+        string[] filesInFilterFolder = Directory.GetFiles(@"G:\No pls\e621\Te lo advierto\FilteredChars");
+        
+        //Delete unfitting images
+        UnityThread.executeInUpdate(() =>
+        {
+            loadingWait = false;
+            LoadingReset("Deleting unfitting images from the filtered folder.");
+        });
+        contImages = 0;
+        foreach (string s in filesInFilterFolder)
+        {
+            UnityThread.executeInUpdate(() =>
+            {
+                UpdateLoadingValue(contImages / filesToShow.Count);
+            });
+            bool delete = true;
+            for (int i = 0; i < filesToShow.Count; i++)
+            {
+                if (Path.GetFileNameWithoutExtension(filesToShow[i]) == Path.GetFileNameWithoutExtension(s))
+                {
+                    delete = false;
+                }
+            }
+            if(delete) File.Delete(s);
+            contImages++;
+        }
+
+        //Add new images
+        UnityThread.executeInUpdate(() =>
+        {
+            loadingWait = false;
+            LoadingReset("Copying new images to the filter folder.");
+        });
+        contImages = 0;
+        foreach (string s in filesToShow)
+        {
+            UnityThread.executeInUpdate(() =>
+            {
+                UpdateLoadingValue(contImages/filesToShow.Count);
+                
+            });
+            if (!File.Exists(@"G:\No pls\e621\Te lo advierto\FilteredChars" + Path.GetFileName(s)))
+            {
+                File.Copy(s, @"G:\No pls\e621\Te lo advierto\FilteredChars\" + Path.GetFileName(s), true);
+            }
+            contImages++;
+        }
+
+        UnityThread.executeInUpdate(() =>
+        {
+            loadingComp.obj.SetActive(false);
+            CreateAdvice("DONE!");
+            Application.OpenURL(@"G:\No pls\e621\Te lo advierto\FilteredChars");
+            done = true;
+        });
+        while (!done) { }
+
+
+    }
+
 }
