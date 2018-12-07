@@ -354,9 +354,10 @@ public class E621_Characters : GlobalActions
     {
         objViewer.SetActive(false);
         loadedData = data;
+        imageViewerPortrait.sprite = sprImage;
         ClearGridChilds();
         textViewerName.text = loadedData.tagName;
-        const string dataFormat = "Categories:\n{0}\nFavorite:\n{1}\nAnimated Appearances:\n{2}\nFetish Worth:\n{3}\nGood & Constant Quality:\n{4}";
+        const string dataFormat = "Categories:\n{0}\n\nFavorite:\n{1}\n\nAnimated Appearances:\n{2}\n\nFetish Worth:\n{3}\n\nGood & Constant Quality:\n{4}";
         string categories = "";
         
 
@@ -374,9 +375,6 @@ public class E621_Characters : GlobalActions
             categories = categories.Substring(0, categories.Length - 2) + ".";
         else
             categories = "Not Specified";
-        
-        if (data.booleans[0]) categories += "Female, ";
-        if (data.booleans[6]) categories += "Dickgirl, ";
         if (!data.booleans[0] && !data.booleans[6])
             imageViewerSex.color = colorBlack;
         else if (data.booleans[0] && !data.booleans[6])
@@ -389,7 +387,7 @@ public class E621_Characters : GlobalActions
         string animated = "";
         string fetish = "";
         string quality = "";
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 4; i++)
         {
             int theInt = 0;
             if (i == 0) theInt = data.animated;
