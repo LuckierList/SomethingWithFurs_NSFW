@@ -239,7 +239,7 @@ public class E621_Filterer : GlobalActions
         if (sourceURL == "") return;
 
         files.Clear();
-        LoadingReset("Loading the file list!");
+        LoadingReset("Loading the file list! This may take a while...");
         StartLoadingWait();
 
         Thread t = new Thread(new ThreadStart(DropSourceThread));

@@ -1452,8 +1452,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b0553b601cb53540a318fa88ae3c7bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  adviceBoxList: []
-  panel: {fileID: 0}
+  adviceBoxList:
+  - obj: {fileID: 1208642134211572}
+    txtTitle: {fileID: 114345525915124564}
+    txtAdvice: {fileID: 114004048476070440}
+    buttonOk: {fileID: 114314187789584088}
+    buttonYes: {fileID: 114877268443647476}
+    buttonNo: {fileID: 114521808392140990}
+  - obj: {fileID: 1504289284052886}
+    txtTitle: {fileID: 114924190830198240}
+    txtAdvice: {fileID: 114448127565016216}
+    buttonOk: {fileID: 114953106133358452}
+    buttonYes: {fileID: 114413396377351760}
+    buttonNo: {fileID: 114914307530295632}
+  - obj: {fileID: 1326124413637750}
+    txtTitle: {fileID: 114365231917119632}
+    txtAdvice: {fileID: 114571881317524648}
+    buttonOk: {fileID: 114235476352096210}
+    buttonYes: {fileID: 114164929022329008}
+    buttonNo: {fileID: 114561232203394108}
+  panel: {fileID: 114297475330202642}
 --- !u!114 &114679405542368522
 MonoBehaviour:
   m_ObjectHideFlags: 1

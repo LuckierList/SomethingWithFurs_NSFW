@@ -54,7 +54,7 @@ public class E621_MainMenu : GlobalActions
                 break;
             case "database":
                 imageOpPortrait.sprite = imgDatabase;
-                textOp.text = "Opens an editor to add Characters/Artists tags. Also add tags to images you'll add to the Gallery.";
+                textOp.text = "Add tags to images you'll add to the Gallery. Also pens an editor to add Characters/Artists tags.";
                 break;
             case "saveAll":
                 textOp.text = "Overwrite all current save data with the changes done in this session. EVERYTHING will be overwriten.";

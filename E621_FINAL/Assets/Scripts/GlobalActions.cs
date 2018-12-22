@@ -314,7 +314,8 @@ public class GlobalActions : MonoBehaviour
                 SceneManager.LoadSceneAsync("E621_Filterer");
                 break;
             case "database":
-                CreateAdvice("The database editor has not been implemented yet.");
+                //CreateAdvice("The database editor has not been implemented yet.");
+                SceneManager.LoadSceneAsync("E621_Database");
                 break;
             default:
                 CreateAdvice("What the...?", "Something went horribly wrong here...");
