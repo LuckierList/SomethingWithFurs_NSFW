@@ -15,6 +15,12 @@ public class E621_MainMenu : GlobalActions
     public Text textOp;
     public Sprite imgBlank;
     public Sprite imgGallery, imgComic, imgVideo, imgGame, imgCharacter, imgArtist, imgReloadArrows, imgFilter, imgPage, imgDatabase, imgExit;
+    public Dropdown dropResolutions;
+
+    private void Start()
+    {
+        
+    }
 
     public void ButtonOnMouseHover(string type)
     {
@@ -82,6 +88,19 @@ public class E621_MainMenu : GlobalActions
     {
         textOp.text = "";
         imageOpPortrait.sprite = imgBlank;
+    }
+
+    public void DropResolution(int value)
+    {
+        switch(value)
+        {
+            case 0:
+                Screen.SetResolution(1920, 1080, true);
+                break;
+            case 1:
+                Screen.SetResolution(1280, 720, false);
+                break;
+        }
     }
 
     public void ButtonGalleryOption(string type)

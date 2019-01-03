@@ -17,6 +17,7 @@ public class Data : MonoBehaviour
     {
         if (act == null)
         {
+            Screen.SetResolution(1920, 1080, true);
             act = this;
             ReloadAllData();
         }

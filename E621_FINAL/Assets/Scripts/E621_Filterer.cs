@@ -42,9 +42,11 @@ public class E621_Filterer : GlobalActions
     bool[] canUseMode;
     bool navigation;
     bool video;
+    Thread filterStatus;
 
     private void Start()
     {
+        filterStatus = new Thread(new ThreadStart(DetermineFilterStatusThreaded));
         navigationButtons = new List<Button>();
         //navigationButtons.Add();
         navigationButtons.Add(buttonNext);
@@ -137,6 +139,8 @@ public class E621_Filterer : GlobalActions
     }
 
     //---------------------------------------------------------------------------
+
+
     void FilteringButtonsSet(bool value)
     {
         foreach(Button b in filteringButtons)
@@ -338,30 +342,42 @@ public class E621_Filterer : GlobalActions
         LoadWebm(imgLoading, imgError, webmShow, webmRender, webmPlayer, files[currentIndex]);
     }
 
-    void DetermineFilterStatus()
+    void DetermineFilterStatusThreaded()
     {
         ImageData temp = Data.act.imageData.Where(tempo => tempo.filename == Path.GetFileName(files[currentIndex])).SingleOrDefault();
         //print("ID: " + temp.id);
-        if (temp != null)
+        UnityThread.executeInUpdate(() =>
         {
-            if (temp.filtered)
+            if (temp != null)
             {
-                buttonKeep.interactable = true;
-                buttonFilter.interactable = false;
+                if (temp.filtered)
+                {
+                    buttonKeep.interactable = true;
+                    buttonFilter.interactable = false;
+                }
+                else
+                {
+                    buttonKeep.interactable = false;
+                    buttonFilter.interactable = true;
+                }
+                buttonDeleteData.interactable = true;
             }
             else
             {
-                buttonKeep.interactable = false;
+                buttonKeep.interactable = true;
                 buttonFilter.interactable = true;
+                buttonDeleteData.interactable = false;
             }
-            buttonDeleteData.interactable = true;
-        }
-        else
-        {
-            buttonKeep.interactable = true;
-            buttonFilter.interactable = true;
-            buttonDeleteData.interactable = false;
-        }
+        });
+    }
+
+    void DetermineFilterStatus()
+    {
+        FilteringButtonsSet(false);
+        NavigationButtonsSet();
+        if (filterStatus.IsAlive) filterStatus.Abort();
+        filterStatus = new Thread(new ThreadStart(DetermineFilterStatusThreaded));
+        filterStatus.Start();
     }
 
 

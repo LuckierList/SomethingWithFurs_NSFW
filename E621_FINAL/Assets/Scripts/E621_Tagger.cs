@@ -15,6 +15,7 @@ public class E621_Tagger : GlobalActions
     public Text textLastGalIndex, textCurrentAction, textLog;
     public Toggle toggleUpdateTags;
     public Scrollbar scrollLog;
+    public Button buttonReturn, buttonSave;
     bool onTagging;
     Coroutine currentCo;
     string[] filesOnSource;
@@ -130,6 +131,12 @@ public class E621_Tagger : GlobalActions
         {
             buttonStartTag.interactable = false;
             buttonStopTag.interactable = true;
+            //-----------------------
+            toggleUpdateTags.interactable = false;
+            buttonReturn.interactable = false;
+            buttonSave.interactable = false;
+            dropSourceTags.interactable = false;
+            //-----------------------
         }
         else
         {
@@ -138,6 +145,13 @@ public class E621_Tagger : GlobalActions
             else
                 buttonStartTag.interactable = false;
             buttonStopTag.interactable = false;
+
+            //-----------------------
+            toggleUpdateTags.interactable = true;
+            buttonReturn.interactable = true;
+            buttonSave.interactable = true;
+            dropSourceTags.interactable = true;
+            //-----------------------
         }
     }
 
@@ -200,6 +214,14 @@ public class E621_Tagger : GlobalActions
                 }
                 message += "(If nothing shows, then nothing works....)";
                 CreateAdvice(message, 1);
+                break;
+            case "save":
+                CreateAdvice("Are you sure you want to Override ImageData.DATA?", 0,
+                    () =>
+                    {
+                        Data.act.SaveData("imageData");
+                        CreateAdvice("'ImageData.DATA' succesfully Overwritten!");
+                    });
                 break;
             case "return":
                 OpenSceneAsync("mainMenu");

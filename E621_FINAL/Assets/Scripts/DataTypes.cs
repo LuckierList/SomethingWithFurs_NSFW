@@ -46,6 +46,5 @@ public class E621CharacterData
     {
         tagName = _tagName;
         urlSmall = _urlSource;
-
     }
 }
