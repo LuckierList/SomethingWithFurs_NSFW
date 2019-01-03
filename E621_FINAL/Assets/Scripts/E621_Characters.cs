@@ -29,7 +29,8 @@ public class E621_Characters : GlobalActions
     public GameObject prefabCharButton;
     public Dropdown dropFilter, dropViewerSize;
     public Toggle toggleFilter;
-    public InputField inputSource;
+    public InputField inputSource, inputStraightGal, inputDickgirlGal, inputFilteredFolder;
+    bool canFilterChars;
     public GameObject objViewer, objEditor, objGridParent;
     public Button buttonNext, buttonPrev, buttonFirst, buttonLast;
     public GridLayoutGroup gridButtons;
@@ -41,6 +42,8 @@ public class E621_Characters : GlobalActions
     public Toggle[] toggles;
     public Dropdown dropAnimated, dropFetish, dropQuality;
     E621CharacterData loadedData;
+    public Button[] buttonsFilter;
+
     [Header("Viewer")]
     public GameObject objViewerChars;
     public Button buttonShowTheirImages;
@@ -52,12 +55,17 @@ public class E621_Characters : GlobalActions
     List<string> urlsCharacterSaved = new List<string>();
     [SerializeField]
     List<string> urlsCharacterToShow = new List<string>();
-
+    string currentChar;
+    List<string> currentSelectedChars = new List<string>();
     // Use this for initialization
     public override void Awake()
     {
         base.Awake();
         inputSource.text = PlayerPrefs.GetString("E621_CharacterSource");
+        inputStraightGal.text = PlayerPrefs.GetString("E621_StraightMainGal");
+        inputDickgirlGal.text = PlayerPrefs.GetString("E621_DickgirlMainGal");
+        inputFilteredFolder.text = PlayerPrefs.GetString("E621_CharsFiltered");
+
         ButtonSizeManager(1, false);
         ButtonAction("configApply");
         act = this;
@@ -65,6 +73,7 @@ public class E621_Characters : GlobalActions
 
     private void Start()
     {
+        
         ButtonSizeManager(dropViewerSize.value);
     }
 
@@ -166,6 +175,8 @@ public class E621_Characters : GlobalActions
                 ShowPage(currentPage);
                 break;
             case "configApply":
+                string messages = "";
+                canFilterChars = true;
                 if (Directory.Exists(inputSource.text))
                 {
                     PlayerPrefs.SetString("E621_CharacterSource", inputSource.text);
@@ -176,8 +187,27 @@ public class E621_Characters : GlobalActions
                 }
                 else
                 {
-                    CreateAdvice("Warning!", "The source URL is not valid, no characters will be shown.");
+                    messages += "The source URL is not valid, no characters will be shown.\n";
                 }
+
+                if(Directory.Exists(inputStraightGal.text) && Directory.Exists(inputDickgirlGal.text) && Directory.Exists(inputFilteredFolder.text))
+                {
+                    PlayerPrefs.SetString("E621_StraightMainGal", inputStraightGal.text);
+                    PlayerPrefs.SetString("E621_DickgirlMainGal", inputDickgirlGal.text);
+                    PlayerPrefs.SetString("E621_CharsFiltered", inputFilteredFolder.text);
+                }
+                else
+                {
+                    canFilterChars = false;
+                    messages += "The Straight/Dickgirl gallery or the filtered folder URLs don't exist, te three of them need to be correct!";
+                }
+
+                foreach(Button b in buttonsFilter)
+                {
+                    b.interactable = canFilterChars;
+                }
+                if (messages != "") CreateAdvice("Warning!", messages, 1);
+
                 break;
             case "save":
                 CreateAdvice("Are you sure you want to overwrite 'Character.DATA'?",0,() =>
@@ -220,13 +250,35 @@ public class E621_Characters : GlobalActions
                 break;
             //Viewer
             case "showImages":
-                LoadingReset("Creating folder with images of the desired character(s).");
-                Thread t = new Thread(new ThreadStart(ShowImagesInFolderThread));
-                t.Start();
-                
+                if (currentSelectedChars.Count == 0)
+                {
+                    CreateAdvice("No characters have been choosen.");
+                    break;
+                }
+                string currentChars = "The selected character(s) are:\n\n";
+                for(int i = 0; i < currentSelectedChars.Count; i++)
+                {
+                    currentChars += currentSelectedChars[i] + ((i != currentSelectedChars.Count - 1) ? " | " : "");
+                }
+                currentChars += "\n\nTotal Images: " + urlsCharacterToShow.Count + "\nContinue?";
+                CreateAdvice(currentChars, 2,
+                    () =>
+                    {
+                        LoadingReset("Creating folder with images of the desired character(s).");
+                        Thread t = new Thread(new ThreadStart(ShowImagesInFolderThread));
+                        t.Start();
+                    }
+                );
                 break;
             case "addImages":
-                if (toggleErasePrevious.isOn) urlsCharacterToShow.Clear();
+                if (toggleErasePrevious.isOn)
+                {
+                    currentSelectedChars.Clear();
+                    urlsCharacterToShow.Clear();
+                }
+
+                if (!currentSelectedChars.Contains(currentChar)) currentSelectedChars.Add(currentChar);
+
                 foreach(string s in urlsCharacterSaved)
                 {
                     if (!urlsCharacterToShow.Contains(s))
@@ -259,7 +311,8 @@ public class E621_Characters : GlobalActions
 
             if (data == null)
                 data = new E621CharacterData(Path.GetFileNameWithoutExtension(showFiles[correctID]), showFiles[correctID]);
-            b.url = data.urlSmall;
+            //b.url = data.urlSmall;
+            b.url = showFiles[correctID];
             b.edited = data.edited;
             b.delay = contDelay;
             b.data = data;
@@ -397,19 +450,19 @@ public class E621_Characters : GlobalActions
             switch (theInt)
             {
                 case 0:
-                    say = "Don't waste your time with this.";
+                    say = "Doesn't Apply";
                     break;
                 case 1:
-                    say = "There is some... Not so much tough.";
+                    say = "A bit of it";
                     break;
                 case 2:
-                    say = "Theres maybe more than usual (50/50?).";
+                    say = "A 50/50, maybe";
                     break;
                 case 3:
-                    say = "It's worhty if this is what you seek.";
+                    say = "Worth it";
                     break;
                 case 4:
-                    say = "Absolutely worth it! Exquisite.";
+                    say = "ABSOLUTELY";
                     break;
             }
             if (i == 0) animated = say;
@@ -417,8 +470,9 @@ public class E621_Characters : GlobalActions
             if (i == 3) quality = say;
         }
 
-        textViewerData.text = string.Format(dataFormat, categories, data.booleans[12] ? "Of course." : "Nope.", animated, fetish, quality);
+        textViewerData.text = string.Format(dataFormat, categories, data.booleans[12] ? "Yes." : "No.", animated, fetish, quality);
         int imageTotal = 0;
+        
         urlsCharacterSaved.Clear();
         foreach (ImageData a in Data.act.imageData)
         {
@@ -428,6 +482,9 @@ public class E621_Characters : GlobalActions
                 imageTotal++;
             }
         }
+
+        currentChar = Path.GetFileNameWithoutExtension(showFiles[id]) + " (" + imageTotal +")";
+
         textViewerAppearances.text = "Appeared '" + imageTotal + "' times.";
         objViewerChars.SetActive(true);
     }
@@ -453,9 +510,9 @@ public class E621_Characters : GlobalActions
             while (!done) { }
             done = false;
             if (cont == 0)
-                filesOnFolder = Directory.GetFiles(@"G:\No pls\e621\Te lo advierto\Straight");
+                filesOnFolder = Directory.GetFiles(inputStraightGal.text);
             if (cont == 1)
-                filesOnFolder = Directory.GetFiles(@"G:\No pls\e621\Te lo advierto\Dickgirl");
+                filesOnFolder = Directory.GetFiles(inputDickgirlGal.text);
             UnityThread.executeInUpdate(() =>
             {
                 loadingWait = false;
@@ -487,7 +544,7 @@ public class E621_Characters : GlobalActions
             LoadingReset("Loading the images from the filter folder...");
             StartLoadingWait();
         });
-        string[] filesInFilterFolder = Directory.GetFiles(@"G:\No pls\e621\Te lo advierto\FilteredChars");
+        string[] filesInFilterFolder = Directory.GetFiles(inputFilteredFolder.text);
         
         //Delete unfitting images
         UnityThread.executeInUpdate(() =>
@@ -528,9 +585,9 @@ public class E621_Characters : GlobalActions
                 UpdateLoadingValue(contImages/filesToShow.Count);
                 
             });
-            if (!File.Exists(@"G:\No pls\e621\Te lo advierto\FilteredChars" + Path.GetFileName(s)))
+            if (!File.Exists(inputFilteredFolder.text + @"\" + Path.GetFileName(s)))
             {
-                File.Copy(s, @"G:\No pls\e621\Te lo advierto\FilteredChars\" + Path.GetFileName(s), true);
+                File.Copy(s, inputFilteredFolder.text + @"\" + Path.GetFileName(s), true);
             }
             contImages++;
         }
@@ -538,8 +595,8 @@ public class E621_Characters : GlobalActions
         UnityThread.executeInUpdate(() =>
         {
             loadingComp.obj.SetActive(false);
-            CreateAdvice("DONE!");
-            Application.OpenURL(@"G:\No pls\e621\Te lo advierto\FilteredChars");
+            CreateAdvice("Finished!");
+            Application.OpenURL(inputFilteredFolder.text);
             done = true;
         });
         while (!done) { }
