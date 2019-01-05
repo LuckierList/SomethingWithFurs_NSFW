@@ -30,9 +30,12 @@ public class GlobalActions : MonoBehaviour
     Texture2D newTexture;
     Sprite newSprite;
 
+    public static GlobalActions act;
+
     // Use this for initialization
     public virtual void Awake()
     {
+        act = this;
         loadingWait = false;
         adviceComp = GameObject.FindGameObjectWithTag("Advice").GetComponent<AdviceComponents>();
         loadingComp = GameObject.FindGameObjectWithTag("Loading").GetComponent<LoadingComponents>();
@@ -292,7 +295,7 @@ public class GlobalActions : MonoBehaviour
                 SceneManager.LoadSceneAsync("E621_MainMenu");
                 break;
             case "gallery":
-                CreateAdvice("The gallery has not been implemented yet.");
+                SceneManager.LoadSceneAsync("E621_Gallery");
                 break;
             case "comic":
                 CreateAdvice("The comic gallery has not been implemented yet.");

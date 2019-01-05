@@ -6167,7 +6167,11 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Appeared '{0}' times.
+  m_Text: 'Appeared ''{0}'' times.
+
+    Straight [0]
+
+    Dickgirl [0['
 --- !u!222 &1184245421
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -7279,8 +7283,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -676.57, y: -138.1}
-  m_SizeDelta: {x: 566.84, y: 228.1}
+  m_AnchoredPosition: {x: -676.57, y: -128.08}
+  m_SizeDelta: {x: 566.8, y: 208.05}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1409232029
 MonoBehaviour:
@@ -8853,8 +8857,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -676.56995, y: -307.27}
-  m_SizeDelta: {x: 566.8, y: 110.25}
+  m_AnchoredPosition: {x: -676.56995, y: -307.2}
+  m_SizeDelta: {x: 566.8, y: 150.2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1949414964
 MonoBehaviour:

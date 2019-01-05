@@ -472,7 +472,8 @@ public class E621_Characters : GlobalActions
 
         textViewerData.text = string.Format(dataFormat, categories, data.booleans[12] ? "Yes." : "No.", animated, fetish, quality);
         int imageTotal = 0;
-        
+        int imageStraigth = 0, imageDickgirl = 0;
+
         urlsCharacterSaved.Clear();
         foreach (ImageData a in Data.act.imageData)
         {
@@ -480,12 +481,21 @@ public class E621_Characters : GlobalActions
             {
                 urlsCharacterSaved.Add(a.filename);
                 imageTotal++;
+
+                if(a.tags.Contains("dickgirl") || a.tags.Contains("intersex") || a.tags.Contains("herm"))
+                {
+                    imageDickgirl++;
+                }
+                else
+                {
+                    imageStraigth++;
+                }
             }
         }
 
         currentChar = Path.GetFileNameWithoutExtension(showFiles[id]) + " (" + imageTotal +")";
 
-        textViewerAppearances.text = "Appeared '" + imageTotal + "' times.";
+        textViewerAppearances.text = "Appeared '" + imageTotal + "' times.\n" + imageStraigth + " - Straight\n" + imageDickgirl + " - Dickgirl";
         objViewerChars.SetActive(true);
     }
 
@@ -502,7 +512,7 @@ public class E621_Characters : GlobalActions
             UnityThread.executeInUpdate(() =>
             {
                 if (filesToShow == null) filesToShow = new List<string>();
-                LoadingReset("Getting the files from a folder. First is straight, second is dickgirl");
+                LoadingReset("Getting the files from a folder. First is straight, second is dickgirl. Might take a while...");
                 StartLoadingWait();
                 
                 done = true;
@@ -526,7 +536,7 @@ public class E621_Characters : GlobalActions
             {
                 UnityThread.executeInUpdate(() =>
                 {
-                    UpdateLoadingValue(contImages / filesOnFolder.Length, "Searching in the folder images of the desired character(s). Added: " + added);
+                    UpdateLoadingValue(contImages / filesOnFolder.Length, "Searching in the folder images of the desired character(s).\nAdded: " + added);
                 });
                 for(int j = 0; j < urlsCharacterToShow.Count; j++)
                 {
