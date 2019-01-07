@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine.UI;
 using System.Threading;
 using System.IO;
+using UnityEngine.Networking;
 
 public class E621_Gallery : GlobalActions
 {
@@ -23,6 +24,8 @@ public class E621_Gallery : GlobalActions
     public GameObject objGridParent, prefabButtonGal;
     public GridLayoutGroup gridButtons;
 
+    public Image imageShower;
+
     public Button buttonNext, buttonPrev, buttonLast, buttonFirst;
 
     public InputField inputFilter;
@@ -32,6 +35,16 @@ public class E621_Gallery : GlobalActions
     bool useFilter = false, canUseFilterFolder = false;
     public InputField inputStraightGal, inputDickgirlGal, inputFilterFolder;
 
+    public Dropdown dropSlideSpeed;
+    public Toggle toggleSlideRandom;
+
+    public Image imageSlideshow;
+    public List<string> listSlideshow = new List<string>();
+    Coroutine slideshowCo;
+    public GameObject objSlideshow, objHourglass;
+    public Toggle toggleSlideshowLoop;
+    public Button buttonSlideshow;
+    public Sprite imgLoading, imgError;
 
     // Use this for initialization
     public override void Awake()
@@ -48,7 +61,7 @@ public class E621_Gallery : GlobalActions
     // Update is called once per frame
     void Update()
     {
-
+        
     }
 
     public void SetSourcesToDefault()
@@ -56,6 +69,10 @@ public class E621_Gallery : GlobalActions
         inputStraightGal.text = PlayerPrefs.GetString("E621_StraightMainGal");
         inputDickgirlGal.text = PlayerPrefs.GetString("E621_DickgirlMainGal");
         inputFilterFolder.text = PlayerPrefs.GetString("E621_GalleryFilterFolder");
+
+        dropSlideSpeed.value = PlayerPrefs.GetInt("E621_SlideshowSpeed", 2);
+        dropSlideSpeed.RefreshShownValue();
+        toggleSlideRandom.isOn = (PlayerPrefs.GetInt("E621_SlideshowRandom", 1)) == 1 ? true : false;
     }
 
     //----------------------------------------------------
@@ -102,8 +119,12 @@ public class E621_Gallery : GlobalActions
     public void InputFilterAdd(string value)
     {
         value = value.ToLower();
-        value.Replace(' ', '_');
-        if (value == "" || value == "none") return;
+        if(value.Contains(" "))
+        {
+            CreateAdvice("NO SPACES PLEASE");
+            return;
+        }
+        if (value == "" || value == "delete a tag") return;
         
         List<string> newOptions = new List<string>();
 
@@ -121,7 +142,7 @@ public class E621_Gallery : GlobalActions
 
     public void DropFilterDelete(int value)
     {
-        if (dropFilter.options[value].text == "None")
+        if (dropFilter.options[value].text == "Delete a Tag")
         {
             return;
         }
@@ -130,6 +151,17 @@ public class E621_Gallery : GlobalActions
         dropFilter.RefreshShownValue();
     }
 
+    void SetAllButtons(bool value)
+    {
+        if(!value)
+            SetNavigationButtons(value, value, value, value);
+        buttonOpenFilterFolder.interactable = value;
+        dropFilter.interactable = value;
+        inputFilter.interactable = value;
+        toggleFilter.interactable = value;
+        buttonFilter.interactable = value;
+        buttonSlideshow.interactable = value;
+    }
 
     //----------------------------------------------------
 
@@ -146,7 +178,7 @@ public class E621_Gallery : GlobalActions
                 FilterPages();
                 break;
             case "openFiltered":
-                CreateAdvice("You are about to move '" + (showFilesFilter.Count - 1) + "' images. Remember this may take a while if you copy/delete a lot of images.\n Continue}?", 0, () =>
+                CreateAdvice("You are about to move '" + (showFilesFilter.Count) + "' images. Remember this may take a while if you copy/delete a lot of images.\n Continue}?", 0, () =>
                 {
                     Thread t = new Thread(new ThreadStart(ShowImagesInFolderThread));
                     t.Start();
@@ -188,8 +220,15 @@ public class E621_Gallery : GlobalActions
                 break;
             case "last":
                 currentPage = showFilesValue / imagesPerPage;
+                if (currentPage % imagesPerPage == 0) currentPage--;
                 SetNavigationButtons(false, true, false, true);
                 ShowPage(currentPage);
+                break;
+            case "resetTags":
+                dropFilter.ClearOptions();
+                List<string> newOp = new List<string>();
+                newOp.Add("Delete a Tag");
+                dropFilter.AddOptions(newOp);
                 break;
             case "configApply":
                 string configApplyMessage = "";
@@ -207,12 +246,13 @@ public class E621_Gallery : GlobalActions
                     inputStraightGal.text = "";
                     inputDickgirlGal.text = "";
                     ClearGridChilds();
+                    SetAllButtons(false);
                 }
                 else
                 {
                     PlayerPrefs.SetString("E621_StraightMainGal", inputStraightGal.text);
                     PlayerPrefs.SetString("E621_DickgirlMainGal", inputDickgirlGal.text);
-                    
+                    SetAllButtons(true);
                     LoadingReset("Getting the files list from Straight Gallery. May take a while... a bit too much I'd say.");
                     StartLoadingWait();
                     Thread t2 = new Thread(new ThreadStart(GetTheImageFilesThread));
@@ -234,6 +274,9 @@ public class E621_Gallery : GlobalActions
                     buttonOpenFilterFolder.interactable = canUseFilterFolder;
                 else
                     buttonOpenFilterFolder.interactable = false;
+
+                PlayerPrefs.SetInt("E621_SlideshowSpeed", dropSlideSpeed.value);
+                PlayerPrefs.SetInt("E621_SlideshowRandom", toggleSlideRandom.isOn ? 1 : 0);
                 break;
         }
     }
@@ -288,6 +331,9 @@ public class E621_Gallery : GlobalActions
 
     public void ShowPage(int page)
     {
+        if (currentPage == 0)
+            SetNavigationButtons(true, false, true, false);
+
         ClearGridChilds();
         Resources.UnloadUnusedAssets();
         //print("SHow page");
@@ -297,6 +343,7 @@ public class E621_Gallery : GlobalActions
         float contDelay = 0f;
         E621_GalleryButton b = prefabButtonGal.GetComponent<E621_GalleryButton>();
 
+        
         for (int i = 0; i < imagesPerPage; i++)
         {
             int correctID = i + (imagesPerPage * currentPage);
@@ -310,6 +357,7 @@ public class E621_Gallery : GlobalActions
 
 
                 b.url = showFiles[correctID];
+                b.imageShower = imageShower;
                 b.delay = contDelay;
             }
             else
@@ -319,6 +367,7 @@ public class E621_Gallery : GlobalActions
                 b.textName.text = Path.GetFileNameWithoutExtension(showFilesFilter[correctID]);
 
                 b.url = showFilesFilter[correctID];
+                b.imageShower = imageShower;
                 b.delay = contDelay;
             }
             
@@ -326,6 +375,7 @@ public class E621_Gallery : GlobalActions
             
             contDelay += 0.001f;
         }
+        
     }
 
     void FilterPages()
@@ -353,7 +403,7 @@ public class E621_Gallery : GlobalActions
                     else
                     {
                         contador++;
-                        if(contador == dropFilter.options.Count - 1)
+                        if (contador == dropFilter.options.Count - 1)
                         {
                             canAdd = true;
                         }
@@ -365,22 +415,22 @@ public class E621_Gallery : GlobalActions
             {
                 string url = "";
 
-                if(File.Exists(inputStraightGal.text + @"\" + data.filename))
+                if (File.Exists(inputStraightGal.text + @"\" + data.filename))
                 {
                     url = inputStraightGal.text + @"\" + data.filename;
                 }
-                else if(File.Exists(inputDickgirlGal.text + @"\" + data.filename))
+                else if (File.Exists(inputDickgirlGal.text + @"\" + data.filename))
                 {
                     url = inputDickgirlGal.text + @"\" + data.filename;
                 }
-                if(url != "")
-                showFilesFilter.Add(url);
+                if (url != "")
+                    showFilesFilter.Add(url);
             }
 
         }
 
         useFilter = true;
-        if (showFilesFilter.Count == 0)
+        if (showFilesFilter.Count == 0 && toggleIncludeStraight.isOn && toggleIncludeDickgirl.isOn)
         {
             CreateAdvice("No images exist, filter skipped!");
             useFilter = false;
@@ -397,6 +447,8 @@ public class E621_Gallery : GlobalActions
         currentPage = 0;
         ShowPage(0);
     }
+
+    //----------------------------------------------------------
 
     void ShowImagesInFolderThread()
     {
@@ -472,5 +524,119 @@ public class E621_Gallery : GlobalActions
 
     }
 
+    //----------------------------------------------------------
+    //Slideshow
 
+    public void SlideshowStart()
+    {
+        if (slideshowCo != null)
+        {
+            StopCoroutine(slideshowCo);
+            slideshowCo = null;
+        }
+
+        listSlideshow.Clear();
+        if(!useFilter)
+        {
+            listSlideshow = showFiles.ToList();
+        }
+        else
+        {
+            listSlideshow = showFilesFilter.ToList();
+        }
+
+        if(toggleSlideRandom.isOn)
+        {
+            for (int i = 0; i < listSlideshow.Count; i++)
+            {
+                string temp = listSlideshow[i];
+                int randomIndex = Random.Range(i, listSlideshow.Count);
+                listSlideshow[i] = listSlideshow[randomIndex];
+                listSlideshow[randomIndex] = temp;
+            }
+        }
+        imageSlideshow.sprite = imgLoading;
+        toggleSlideshowLoop.isOn = true;
+        objSlideshow.SetActive(true);
+        slideshowCo = StartCoroutine(SlideShow());
+    }
+
+    public void SlideshowStop()
+    {
+        if(slideshowCo!= null)
+        {
+            StopCoroutine(slideshowCo);
+            slideshowCo = null;
+        }
+
+        objHourglass.SetActive(false);
+        objSlideshow.SetActive(false);
+    }
+    
+    IEnumerator SlideShow()
+    {
+        yield return null;
+        do
+        {
+            for(int i = 0; i < listSlideshow.Count; i++)
+            {
+                if (!File.Exists(listSlideshow[i]))
+                {
+                    if (GetComponent<Button>() != null)
+                        GetComponent<Button>().interactable = false;
+                    imageSlideshow.sprite = imgError;
+                }
+                else
+                {
+                    using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture("file://" + listSlideshow[i]))
+                    {
+                        objHourglass.SetActive(true);
+                        yield return uwr.SendWebRequest();
+                        if (uwr.isNetworkError || uwr.isHttpError)
+                        {
+                            Debug.Log(uwr.error);
+                            
+                        }
+                        else
+                        {
+                            newTexture = DownloadHandlerTexture.GetContent(uwr);
+                            newSprite = Sprite.Create(newTexture, new Rect(0f, 0f, newTexture.width, newTexture.height), new Vector2(.5f, .5f), 100f);
+                            imageSlideshow.sprite = newSprite;
+                            objHourglass.SetActive(false);
+                            Resources.UnloadUnusedAssets();
+                        }
+                    }
+                }
+                float delay = 1f;
+                switch(dropSlideSpeed.value)
+                {
+                    case 0:
+                        delay = 6f;
+                        break;
+                    case 1:
+                        delay = 4f;
+                        break;
+
+                    case 2:
+                        delay = 2.5f;
+                        break;
+                    case 3:
+                        delay = 1f;
+                        break;
+                    case 4:
+                        delay = 0.25f;
+                        break;
+                }
+                yield return new WaitForSeconds(delay);
+
+            }
+            yield return null;
+        }
+        while (toggleSlideshowLoop.isOn);
+
+        slideshowCo = null;
+        objHourglass.SetActive(false);
+        objSlideshow.SetActive(false);
+    }
+    //----------------------------------------------------------
 }

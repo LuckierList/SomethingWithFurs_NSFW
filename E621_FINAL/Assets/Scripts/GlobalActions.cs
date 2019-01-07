@@ -27,8 +27,10 @@ public class GlobalActions : MonoBehaviour
 
     //Load Image CTRL!!!
     Coroutine loadImageCO, loadWebmCO;
-    Texture2D newTexture;
-    Sprite newSprite;
+    [HideInInspector]
+    public Texture2D newTexture;
+    [HideInInspector]
+    public Sprite newSprite;
 
     public static GlobalActions act;
 
@@ -273,6 +275,11 @@ public class GlobalActions : MonoBehaviour
 
     //-----------------------------------------------------------
     //Misc.
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="url">Uses complete URL, not the "without extension" one!!</param>
     public void OpenInPageE621(string url)
     {
         print("nani");

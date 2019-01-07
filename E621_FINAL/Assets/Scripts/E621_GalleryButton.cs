@@ -18,6 +18,8 @@ public class E621_GalleryButton : MonoBehaviour
     public Sprite imgLoading, imgError;
     Texture2D newTexture;
     Sprite newSprite;
+    [HideInInspector]
+    public Image imageShower;
 
     private void Start()
     {
@@ -39,6 +41,17 @@ public class E621_GalleryButton : MonoBehaviour
             allTags += s + "  ";
         }
         GlobalActions.act.CreateAdvice("The tags of this image are: ", allTags, 2);
+    }
+
+    public void ButtonShowImage()
+    {
+        imageShower.sprite = newSprite;
+        imageShower.gameObject.SetActive(true);
+    }
+
+    public void ButtonOpenInPage()
+    {
+        GlobalActions.act.OpenInPageE621(url);
     }
 
     public void StopThisCoroutine()
