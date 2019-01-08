@@ -35,6 +35,8 @@ public class E621_Gallery : GlobalActions
     bool useFilter = false, canUseFilterFolder = false;
     public InputField inputStraightGal, inputDickgirlGal, inputFilterFolder;
 
+    public Text textImageCount;
+
     public Dropdown dropSlideSpeed;
     public Toggle toggleSlideRandom;
 
@@ -61,7 +63,10 @@ public class E621_Gallery : GlobalActions
     // Update is called once per frame
     void Update()
     {
-        
+        if (!useFilter)
+            textImageCount.text = "Files in directory:\n" + showFiles.Count;
+        else
+            textImageCount.text = "Files in directory:\n" + showFilesFilter.Count;
     }
 
     public void SetSourcesToDefault()
@@ -250,6 +255,7 @@ public class E621_Gallery : GlobalActions
                 }
                 else
                 {
+
                     PlayerPrefs.SetString("E621_StraightMainGal", inputStraightGal.text);
                     PlayerPrefs.SetString("E621_DickgirlMainGal", inputDickgirlGal.text);
                     SetAllButtons(true);
@@ -283,7 +289,7 @@ public class E621_Gallery : GlobalActions
 
     void GetTheImageFilesThread()
     {
-        files1 = Directory.GetFiles(inputStraightGal.text);
+        files1 = Directory.GetFiles(inputStraightGal.text, "*", SearchOption.TopDirectoryOnly);
         
         UnityThread.executeInUpdate(() =>
         {
@@ -291,7 +297,7 @@ public class E621_Gallery : GlobalActions
             StartLoadingWait();
         });
 
-        files2 = Directory.GetFiles(inputDickgirlGal.text);
+        files2 = Directory.GetFiles(inputDickgirlGal.text, "*", SearchOption.TopDirectoryOnly);
 
         UnityThread.executeInUpdate(() =>
         {

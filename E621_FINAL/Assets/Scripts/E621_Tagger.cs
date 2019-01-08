@@ -12,14 +12,19 @@ public class E621_Tagger : GlobalActions
     public InputField inputStraightNew, inputDickgirlNew, inputIntersexNew, inputHermNew, inputStartIndexTag;
     public Button buttonStartTag, buttonStopTag;
     public Dropdown dropSourceTags;
-    public Text textLastGalIndex, textCurrentAction, textLog;
+    public Text textLastGalIndex, textCurrentAction, textLog, textFileCount;
     public Toggle toggleUpdateTags;
     public Scrollbar scrollLog;
-    public Button buttonReturn, buttonSave;
+    public Button buttonReturn, buttonSave, buttonMoveFolder, buttonConfig;
+    public InputField inputStraightGal, inputDickgirlGal;
     bool onTagging;
     Coroutine currentCo;
     string[] filesOnSource;
     string sourceUrl;
+    List<string> listLog = new List<string>();
+
+    string moveFolderUrlSource = "";
+    string moveFolderUrlDestiny = "";
 
     //for the textLastGalIndex
     static string lastGalIndexFormat = "Last Index:\n{0}\n{1}";
@@ -68,10 +73,12 @@ public class E621_Tagger : GlobalActions
     //Source handler
     public void DropSource(int source)
     {
+        
         switch (source)
         {
             case 0:
                 sourceUrl = "";
+                textFileCount.text = "Files on directory:\n0";
                 return;
             case 1://straight new
                 sourceUrl = inputStraightNew.text;
@@ -91,6 +98,7 @@ public class E621_Tagger : GlobalActions
         if (!Directory.Exists(sourceUrl))
         {
             CreateAdvice("The URL of the source does not exist! Check it in configuration.");
+            textFileCount.text = "Files on directory:\n0";
             dropSourceTags.value = 0;
             dropSourceTags.RefreshShownValue();
             return;
@@ -111,6 +119,7 @@ public class E621_Tagger : GlobalActions
         UnityThread.executeInUpdate(() =>
         {
             filesOnSource = filesThread;
+            textFileCount.text = "Files on directory:\n" + filesOnSource.Length;
             loadingComp.obj.SetActive(false);
         });
     }
@@ -121,6 +130,9 @@ public class E621_Tagger : GlobalActions
         inputDickgirlNew.text = PlayerPrefs.GetString("TaggerDickgirlNew");
         inputIntersexNew.text = PlayerPrefs.GetString("TaggerIntersexNew");
         inputHermNew.text = PlayerPrefs.GetString("TaggerHermNew");
+
+        inputStraightGal.text = PlayerPrefs.GetString("E621_StraightMainGal");
+        inputDickgirlGal.text = PlayerPrefs.GetString("E621_DickgirlMainGal");
     }
 
     //-------------------------------------------------------------------
@@ -136,6 +148,9 @@ public class E621_Tagger : GlobalActions
             buttonReturn.interactable = false;
             buttonSave.interactable = false;
             dropSourceTags.interactable = false;
+            buttonConfig.interactable = false;
+            buttonMoveFolder.interactable = false;
+            
             //-----------------------
         }
         else
@@ -151,6 +166,8 @@ public class E621_Tagger : GlobalActions
             buttonReturn.interactable = true;
             buttonSave.interactable = true;
             dropSourceTags.interactable = true;
+            buttonConfig.interactable = true;
+            buttonMoveFolder.interactable = true;
             //-----------------------
         }
     }
@@ -167,7 +184,123 @@ public class E621_Tagger : GlobalActions
         }
     }
 
+    public void ButtonMoveToFolder()
+    {
+        if(dropSourceTags.value == 0)
+        {
+            CreateAdvice("Not available.");
+            return;
+        }
+        Thread t = new Thread(new ThreadStart(MoveToFolderThread));
+        if (dropSourceTags.value == 1)
+        {
+            moveFolderUrlSource = inputStraightNew.text;
+            moveFolderUrlDestiny = inputStraightGal.text;
+        }
+        else
+        {
+            switch(dropSourceTags.value)
+            {
+                case 2:
+                    moveFolderUrlSource = inputDickgirlNew.text;
+                    break;
+                case 3:
+                    moveFolderUrlSource = inputStraightNew.text;
+                    break;
+                case 4:
+                    moveFolderUrlSource = inputHermNew.text;
+                    break;
+            }
+            moveFolderUrlDestiny = inputDickgirlGal.text;
+        }
+        //1--
+        CreateAdvice("Currently moving: " + dropSourceTags.options[dropSourceTags.value].text + "\nTarget: " + Path.GetDirectoryName(moveFolderUrlDestiny) + "nContinue?", 0, () =>
+        {
+            if (Directory.Exists(moveFolderUrlDestiny) && Directory.Exists(moveFolderUrlSource))
+            {
+                t.Start();
+            }
+            else
+            {
+                CreateAdvice("A url didn't exist, please check it!");
+            }
+        });
+        //1--
 
+        
+    }
+
+    void MoveToFolderThread()
+    {
+        UnityThread.executeInUpdate(() =>
+        {
+            LoadingReset("Getting the list of the source folder...");
+            StartLoadingWait();
+        });
+        string[] sourceUrls = Directory.GetFiles(moveFolderUrlSource);
+
+        UnityThread.executeInUpdate(() =>
+        {
+            loadingWait = false;
+            LoadingReset("Moving the images to the destiny folder!");
+        });
+
+        float cont = 0f;
+        foreach(string s in sourceUrls)
+        {
+            try
+            {
+                Directory.Move(s, moveFolderUrlDestiny + @"\" + Path.GetFileName(s));
+            }
+            catch (System.Exception)
+            {
+
+            }
+            cont++;
+            UnityThread.executeInUpdate(() =>
+            {
+                UpdateLoadingValue(cont/sourceUrls.Length);
+            });
+        }
+
+        UnityThread.executeInUpdate(() =>
+        {
+            LoadingReset("Getting the list of the filtered folder...");
+            //print(moveFolderUrlSource.Replace("Good", "Filtered"));
+            StartLoadingWait();
+        });
+
+        sourceUrls = Directory.GetFiles(moveFolderUrlSource.Replace("Good", "Filtered"));
+
+        UnityThread.executeInUpdate(() =>
+        {
+            loadingWait = false;
+            LoadingReset("Deleting the filtered folder images...");
+        });
+
+        foreach (string s in sourceUrls)
+        {
+            try
+            {
+               File.Delete(s);
+            }
+            catch (System.Exception)
+            {
+
+            }
+            cont++;
+            UnityThread.executeInUpdate(() =>
+            {
+                UpdateLoadingValue(cont / sourceUrls.Length);
+            });
+        }
+
+        UnityThread.executeInUpdate(() =>
+        {
+            loadingComp.obj.SetActive(false);
+            CreateAdvice("Done");
+        });
+    }
 
     public void ButtonActions(string value)
     {
@@ -212,6 +345,21 @@ public class E621_Tagger : GlobalActions
                     PlayerPrefs.SetString("TaggerHermNew", inputHermNew.text);
                     message += "Herm (New)\n";
                 }
+
+                if (Directory.Exists(inputStraightGal.text))
+                {
+                    PlayerPrefs.SetString("E621_StraightMainGal", inputStraightGal.text);
+                    message += "Straight Gal\n";
+
+                }
+
+                if (Directory.Exists(inputDickgirlGal.text))
+                {
+                    PlayerPrefs.SetString("E621_DickgirlMainGal", inputStraightGal.text);
+                    message += "Dickgirl Gal\n";
+
+                }
+
                 message += "(If nothing shows, then nothing works....)";
                 CreateAdvice(message, 1);
                 break;
@@ -304,9 +452,9 @@ public class E621_Tagger : GlobalActions
             //ObtenerID
 
             string imageIDs = page.Substring(page.IndexOf("id") + 4, page.Length - (page.IndexOf("id") + 4));
-            print(imageIDs);
+            //print(imageIDs);
             imageIDs = imageIDs.Substring(0, imageIDs.IndexOf(","));
-            print(imageIDs);
+            //print(imageIDs);
             int imageID = int.Parse(imageIDs);
 
             //Obtener tags
@@ -350,7 +498,17 @@ public class E621_Tagger : GlobalActions
 
     void AddLog(string newLog)
     {
-        textLog.text += "\n" + newLog + "\n";
+        if (listLog.Count > 224)
+        {
+            listLog.RemoveAt(0);
+        }
+        listLog.Add(newLog);
+        
+        textLog.text = "Start of the log:";
+        foreach(string s in listLog)
+        {
+            textLog.text += "\n" + s + "\n";
+        }
         scrollLog.value = 0;
     }
 }
