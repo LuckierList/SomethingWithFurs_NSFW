@@ -356,6 +356,12 @@ CanvasRenderer:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 216724493}
   m_CullTransparentMesh: 0
+--- !u!114 &221298668 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 114034775370848256, guid: 9f6a70061788e5045b6cf4dca1954ff2,
+    type: 2}
+  m_PrefabInternal: {fileID: 706462552}
+  m_Script: {fileID: 1392445389, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1 &239013949
 GameObject:
   m_ObjectHideFlags: 0
@@ -948,6 +954,8 @@ MonoBehaviour:
   buttonSave: {fileID: 1487787857}
   buttonMoveFolder: {fileID: 1001943934}
   buttonConfig: {fileID: 216724495}
+  buttonGallery: {fileID: 1942108723}
+  buttonFilterer: {fileID: 221298668}
   inputStraightGal: {fileID: 1852419731}
   inputDickgirlGal: {fileID: 1718053319}
 --- !u!4 &402551867
@@ -3588,12 +3596,12 @@ Prefab:
     - target: {fileID: 224222916915279300, guid: 0180872eaff64f443a2bd3ac6de006f4,
         type: 2}
       propertyPath: m_RootOrder
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 224365488608076516, guid: 0180872eaff64f443a2bd3ac6de006f4,
         type: 2}
       propertyPath: m_RootOrder
-      value: 2
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 114989067672935940, guid: 0180872eaff64f443a2bd3ac6de006f4,
         type: 2}
@@ -5045,6 +5053,12 @@ MonoBehaviour:
     type: 2}
   m_PrefabInternal: {fileID: 1852419729}
   m_Script: {fileID: 575553740, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+--- !u!114 &1942108723 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 114034775370848256, guid: 9f6a70061788e5045b6cf4dca1954ff2,
+    type: 2}
+  m_PrefabInternal: {fileID: 1637230275}
+  m_Script: {fileID: 1392445389, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1 &2143578577
 GameObject:
   m_ObjectHideFlags: 0

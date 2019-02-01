@@ -15,7 +15,7 @@ public class E621_Tagger : GlobalActions
     public Text textLastGalIndex, textCurrentAction, textLog, textFileCount;
     public Toggle toggleUpdateTags;
     public Scrollbar scrollLog;
-    public Button buttonReturn, buttonSave, buttonMoveFolder, buttonConfig;
+    public Button buttonReturn, buttonSave, buttonMoveFolder, buttonConfig, buttonGallery, buttonFilterer;
     public InputField inputStraightGal, inputDickgirlGal;
     bool onTagging;
     Coroutine currentCo;
@@ -143,15 +143,6 @@ public class E621_Tagger : GlobalActions
         {
             buttonStartTag.interactable = false;
             buttonStopTag.interactable = true;
-            //-----------------------
-            toggleUpdateTags.interactable = false;
-            buttonReturn.interactable = false;
-            buttonSave.interactable = false;
-            dropSourceTags.interactable = false;
-            buttonConfig.interactable = false;
-            buttonMoveFolder.interactable = false;
-            
-            //-----------------------
         }
         else
         {
@@ -160,16 +151,18 @@ public class E621_Tagger : GlobalActions
             else
                 buttonStartTag.interactable = false;
             buttonStopTag.interactable = false;
-
-            //-----------------------
-            toggleUpdateTags.interactable = true;
-            buttonReturn.interactable = true;
-            buttonSave.interactable = true;
-            dropSourceTags.interactable = true;
-            buttonConfig.interactable = true;
-            buttonMoveFolder.interactable = true;
-            //-----------------------
+            
         }
+
+        toggleUpdateTags.interactable = !onTagging;
+        buttonReturn.interactable = !onTagging;
+        buttonSave.interactable = !onTagging;
+        dropSourceTags.interactable = !onTagging;
+        buttonConfig.interactable = !onTagging;
+        buttonMoveFolder.interactable = !onTagging;
+        buttonGallery.interactable = !onTagging;
+        buttonFilterer.interactable = !onTagging;
+
     }
 
     void UpdateCurrentActionText()

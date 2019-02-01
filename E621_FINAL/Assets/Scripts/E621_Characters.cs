@@ -73,7 +73,6 @@ public class E621_Characters : GlobalActions
 
     private void Start()
     {
-        
         ButtonSizeManager(dropViewerSize.value);
     }
 
@@ -199,7 +198,7 @@ public class E621_Characters : GlobalActions
                 else
                 {
                     canFilterChars = false;
-                    messages += "The Straight/Dickgirl gallery or the filtered folder URLs don't exist, te three of them need to be correct!";
+                    messages += "The Straight/Dickgirl gallery or the filtered folder URLs don't exist, the three of them need to be correct!";
                 }
 
                 foreach(Button b in buttonsFilter)

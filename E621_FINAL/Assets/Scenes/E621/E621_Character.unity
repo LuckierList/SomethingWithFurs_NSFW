@@ -1587,6 +1587,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   loadingComp: {fileID: 0}
   loadingWait: 0
+  newTexture: {fileID: 0}
+  newSprite: {fileID: 0}
   buttonSizesValue: 540100009001000052030000
   buttonSizesQuantity: 0a0000000800000002000000
   files: []

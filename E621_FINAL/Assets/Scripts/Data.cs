@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
@@ -19,13 +20,18 @@ public class Data : MonoBehaviour
         {
             Screen.SetResolution(1920, 1080, true);
             act = this;
-            ReloadAllData();
+            
         }
         else
         {
             Destroy(gameObject);
         }
         DontDestroyOnLoad(gameObject);
+    }
+
+    private void Start()
+    {
+        ReloadAllData();
     }
 
     public void ReloadAllData()

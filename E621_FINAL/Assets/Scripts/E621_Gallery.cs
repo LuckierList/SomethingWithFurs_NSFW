@@ -44,9 +44,11 @@ public class E621_Gallery : GlobalActions
     public List<string> listSlideshow = new List<string>();
     Coroutine slideshowCo;
     public GameObject objSlideshow, objHourglass;
-    public Toggle toggleSlideshowLoop;
-    public Button buttonSlideshow;
+    public Toggle toggleSlideshowLoop, toggleSlideshowPause;
+    public Button buttonSlideshow, buttonSlideshowOpenPage, buttonSlideshowReturn;
     public Sprite imgLoading, imgError;
+    public Text textSlideshowReturn;
+    int slideShowReturn = 0;
 
     // Use this for initialization
     public override void Awake()
@@ -67,6 +69,8 @@ public class E621_Gallery : GlobalActions
             textImageCount.text = "Files in directory:\n" + showFiles.Count;
         else
             textImageCount.text = "Files in directory:\n" + showFilesFilter.Count;
+
+        textSlideshowReturn.text = "Returning:\n" + slideShowReturn;
     }
 
     public void SetSourcesToDefault()
@@ -563,6 +567,8 @@ public class E621_Gallery : GlobalActions
         }
         imageSlideshow.sprite = imgLoading;
         toggleSlideshowLoop.isOn = true;
+        buttonSlideshowOpenPage.interactable = false;
+        buttonSlideshowReturn.interactable = false;
         objSlideshow.SetActive(true);
         slideshowCo = StartCoroutine(SlideShow());
     }
@@ -578,6 +584,11 @@ public class E621_Gallery : GlobalActions
         objHourglass.SetActive(false);
         objSlideshow.SetActive(false);
     }
+
+    public void ButtonSlideShowReturn()
+    {
+        slideShowReturn++;
+    }
     
     IEnumerator SlideShow()
     {
@@ -586,6 +597,25 @@ public class E621_Gallery : GlobalActions
         {
             for(int i = 0; i < listSlideshow.Count; i++)
             {
+                buttonSlideshow.interactable = false;
+                while (!(slideShowReturn == 0))
+                {
+                    if (i - 1 == -1)
+                    {
+                        slideShowReturn = 0;
+                        continue;
+                    }
+                    i--;
+                    slideShowReturn--;
+                }
+                buttonSlideshowReturn.interactable = !(i == 0);
+                buttonSlideshowOpenPage.onClick.RemoveAllListeners();
+                buttonSlideshowOpenPage.onClick.AddListener(() =>
+                {
+                    toggleSlideshowPause.isOn = true;
+                    OpenInPageE621(listSlideshow[i]);
+                });
+                buttonSlideshowOpenPage.interactable = true;
                 if (!File.Exists(listSlideshow[i]))
                 {
                     if (GetComponent<Button>() != null)
@@ -622,7 +652,6 @@ public class E621_Gallery : GlobalActions
                     case 1:
                         delay = 4f;
                         break;
-
                     case 2:
                         delay = 2.5f;
                         break;
@@ -634,7 +663,7 @@ public class E621_Gallery : GlobalActions
                         break;
                 }
                 yield return new WaitForSeconds(delay);
-
+                while (toggleSlideshowPause.isOn) yield return null;
             }
             yield return null;
         }
