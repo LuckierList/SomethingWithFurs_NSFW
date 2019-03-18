@@ -35,6 +35,15 @@ public class E621_Gallery : GlobalActions
     bool useFilter = false, canUseFilterFolder = false;
     public InputField inputStraightGal, inputDickgirlGal, inputFilterFolder;
 
+    public Button buttonTags;
+    public Dropdown dropTagsChar, dropTagsArtist, dropTagsSpecific;
+    public InputField inputTagsSpecific;
+    public Toggle toggleTagsDelete;
+
+    public Text textTagLeaderCategories, textTagLeaderContent, textTagLeaderHighlight;
+    public Button buttonExitTagLeader;
+    public Slider sliderTagLeader;
+
     public Text textImageCount;
 
     public Dropdown dropSlideSpeed;
@@ -170,6 +179,164 @@ public class E621_Gallery : GlobalActions
         toggleFilter.interactable = value;
         buttonFilter.interactable = value;
         buttonSlideshow.interactable = value;
+        buttonTags.interactable = value;
+    }
+
+    //----------------------------------------------------
+    //Tags
+    public void TagsDefault()
+    {
+        List<string> newOptions = new List<string>();
+        foreach (E621CharacterData dat in Data.act.e621CharacterData)
+        {
+            newOptions.Add(dat.tagName);
+        }
+        newOptions.Sort();
+        newOptions.Insert(0, "Select");
+        dropTagsChar.ClearOptions();
+        dropTagsChar.AddOptions(newOptions);
+
+        newOptions.Clear();
+
+        //create tags options here
+
+        TagsDefaultSpecific();
+    }
+    
+    public void DropAddTagCharacter(int value)
+    {
+        if (value == 0) return;
+        dropTagsChar.value = 0;
+        dropTagsChar.RefreshShownValue();
+        InputFilterAdd(dropTagsChar.options[value].text);
+    }
+
+    public void DropAddTagArtist(int value)
+    {
+        if (value == 0) return;
+        dropTagsArtist.value = 0;
+        dropTagsArtist.RefreshShownValue();
+        InputFilterAdd(dropTagsArtist.options[value].text);
+    }
+
+    public void DropAddTagSpecific(int value)
+    {
+        if (value == 0) return;
+        if(!toggleTagsDelete.isOn)
+        {
+            dropTagsSpecific.value = 0;
+            dropTagsSpecific.RefreshShownValue();
+            InputFilterAdd(dropTagsSpecific.options[value].text);
+        }
+        else
+        {
+            dropTagsSpecific.value = 0;
+            dropTagsSpecific.RefreshShownValue();
+            CreateAdvice("Delete the selected tag?\n" + dropTagsSpecific.options[value].text,0,() =>
+            {
+                Data.act.e621SpecificTags.Remove(dropTagsSpecific.options[value].text);
+                TagsDefaultSpecific();
+            });
+        }
+    }
+
+    void TagsDefaultSpecific()
+    {
+        List<string> newOptions = new List<string>();
+        foreach (string s in Data.act.e621SpecificTags)
+        {
+            newOptions.Add(s);
+        }
+        newOptions.Sort();
+        newOptions.Insert(0, "Select");
+        dropTagsSpecific.ClearOptions();
+        dropTagsSpecific.AddOptions(newOptions);
+    }
+
+    public void InputAddTagSpecific(string value)
+    {
+        inputTagsSpecific.text = "";
+        if(value != "" && !value.Contains(" ") && !Data.act.e621SpecificTags.Contains(value))
+        {
+            Data.act.e621SpecificTags.Add(value);
+            TagsDefaultSpecific();
+        }
+    }
+
+    public void ButtonExitTags()
+    {
+        Data.act.SaveData("e621SpecificTags");
+    }
+
+    //----------------------------------------------------
+    //Tags Leaderboar
+    public class TagLeaderboard
+    {
+        public string tagName;
+        public int quantity;
+        
+        public TagLeaderboard(string _tagName)
+        {
+            tagName = _tagName;
+            quantity = 1;
+        }
+    }
+
+    public void TagsLeaderboardCalculate()
+    {
+        const string categories = "Female:\n{0}\nDickgirl:\n{1}\nIntersex:\n{2}\nHerm:\n{3}";
+        const string highlight = "Most Popular:\n{0}\nLeast Popular:\n{1}\nDominantSpecies:\n{2}\nSecond Most Dominant:\n{3}\nThird Most Dominant:\n{4}";
+        sliderTagLeader.value = 0;
+
+        textTagLeaderCategories.text = string.Format(categories, "---", "---", "---", "---");
+        textTagLeaderHighlight.text = string.Format(highlight, "---", "---", "---", "---", "---");
+        textTagLeaderContent.text = "---";
+        buttonExitTagLeader.interactable = false;
+        Thread t = new Thread(new ThreadStart(TagLeaderBoardCalculateThread));
+        t.Start();
+    }
+
+    void TagLeaderBoardCalculateThread()
+    {
+        List<TagLeaderboard> collectedTags = new List<TagLeaderboard>();
+        float cont = 0;
+        foreach (ImageData dat in Data.act.imageData)
+        {
+            UnityThread.executeInUpdate(() =>
+            {
+                sliderTagLeader.value = cont / Data.act.imageData.Count;
+            });
+            foreach (string t in dat.tags)
+            {
+                TagLeaderboard tag = collectedTags.FirstOrDefault(x => x.tagName == t);
+                if (tag == null)
+                {
+                    tag = new TagLeaderboard(t);
+                    collectedTags.Add(tag);
+                }
+                else
+                {
+                    tag.quantity++;
+                }
+            }
+            cont++;
+        }
+        collectedTags.Sort((x, y) => -1 * x.quantity.CompareTo(y.quantity));
+        foreach (TagLeaderboard s in collectedTags)
+        {
+            bool end = false;
+            UnityThread.executeInUpdate(() =>
+            {
+                textTagLeaderContent.text += "" + s.quantity + " =>  " + s.tagName + "\n";
+                end = true;
+            });
+            while (!end) { }
+        }
+
+        UnityThread.executeInUpdate(() =>
+        {
+            buttonExitTagLeader.interactable = true;
+        });
     }
 
     //----------------------------------------------------

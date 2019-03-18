@@ -27,25 +27,37 @@ public class UnityThread : MonoBehaviour
 
     ////////////////////////////////////////////////LATEUPDATE IMPL////////////////////////////////////////////////////////
     //Holds actions received from another Thread. Will be coped to actionCopiedQueueLateUpdateFunc then executed from there
-    private static List<System.Action> actionQueuesLateUpdateFunc = new List<Action>();
+
+    //HIDDEN BY ME!!!!!!!!!!!!!!!!!!!!!!
+    //private static List<System.Action> actionQueuesLateUpdateFunc = new List<Action>();
 
     //holds Actions copied from actionQueuesLateUpdateFunc to be executed
-    List<System.Action> actionCopiedQueueLateUpdateFunc = new List<System.Action>();
+
+    //HIDDEN BY ME!!!!!!!!!!!!!!!!!!!!!!
+    //List<System.Action> actionCopiedQueueLateUpdateFunc = new List<System.Action>();
 
     // Used to know if whe have new Action function to execute. This prevents the use of the lock keyword every frame
-    private volatile static bool noActionQueueToExecuteLateUpdateFunc = true;
+
+    //HIDDEN BY ME!!!!!!!!!!!!!!!!!!!!!!
+    //private volatile static bool noActionQueueToExecuteLateUpdateFunc = true;
 
 
 
     ////////////////////////////////////////////////FIXEDUPDATE IMPL////////////////////////////////////////////////////////
     //Holds actions received from another Thread. Will be coped to actionCopiedQueueFixedUpdateFunc then executed from there
-    private static List<System.Action> actionQueuesFixedUpdateFunc = new List<Action>();
+
+    //HIDDEN BY ME!!!!!!!!!!!!!!!!!!!!!!
+    //private static List<System.Action> actionQueuesFixedUpdateFunc = new List<Action>();
 
     //holds Actions copied from actionQueuesFixedUpdateFunc to be executed
-    List<System.Action> actionCopiedQueueFixedUpdateFunc = new List<System.Action>();
+
+    //HIDDEN BY ME!!!!!!!!!!!!!!!!!!!!!!
+    //List<System.Action> actionCopiedQueueFixedUpdateFunc = new List<System.Action>();
 
     // Used to know if whe have new Action function to execute. This prevents the use of the lock keyword every frame
-    private volatile static bool noActionQueueToExecuteFixedUpdateFunc = true;
+
+    //HIDDEN BY ME!!!!!!!!!!!!!!!!!!!!!!
+    //private volatile static bool noActionQueueToExecuteFixedUpdateFunc = true;
 
 
     //Used to initialize UnityThread. Call once before any function here

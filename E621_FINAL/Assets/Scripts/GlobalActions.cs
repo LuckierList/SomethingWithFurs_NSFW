@@ -282,7 +282,6 @@ public class GlobalActions : MonoBehaviour
     /// <param name="url">Uses complete URL, not the "without extension" one!!</param>
     public void OpenInPageE621(string url)
     {
-        print("nani");
         string filenameNoExtension = Path.GetFileNameWithoutExtension(url);
 
         //Prevenir signo "-"; antes de este signo, viene la ID de la imagen, se lo quito para el código MD5, la ID se obtendrá

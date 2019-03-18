@@ -9,7 +9,7 @@ using System.Threading;
 
 public class E621_Characters : GlobalActions
 {
-    public static E621_Characters act;
+    public new static E621_Characters act;
     public int[] buttonSizesValue;
     public int[] buttonSizesQuantity;
     [HideInInspector]

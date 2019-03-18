@@ -13,6 +13,8 @@ public class Data : MonoBehaviour
     public List<ImageData> imageData;
     [HideInInspector]
     public List<E621CharacterData> e621CharacterData;
+    [HideInInspector]
+    public List<string> e621SpecificTags;
 
     private void Awake()
     {
@@ -38,6 +40,7 @@ public class Data : MonoBehaviour
     {
         LoadData("imageData");
         LoadData("e621CharacterData");
+        LoadData("e621SpecificTags");
         print("Reloaded All Data");
     }
 
@@ -77,6 +80,19 @@ public class Data : MonoBehaviour
                     e621CharacterData = new List<E621CharacterData>();
                 }
                 break;
+            case "e621SpecificTags":
+                if (File.Exists(Application.persistentDataPath + "/SpecificTags.DATA"))
+                {
+                    file = File.Open(Application.persistentDataPath + "/SpecificTags.DATA", FileMode.Open);
+                    e621SpecificTags = (List<string>)bf.Deserialize(file);
+                    file.Close();
+                }
+                else
+                {
+                    print("File 'SpecificTags.DATA' doesn't exist.");
+                    e621SpecificTags = new List<string>();
+                }
+                break;
         }
     }
 
@@ -84,12 +100,13 @@ public class Data : MonoBehaviour
     {
         SaveData("imageData");
         SaveData("e621CharacterData");
+        SaveData("e621SpecificTags");
     }
 
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="type">imageData, e621CharacterData, </param>
+    /// <param name="type">imageData, e621CharacterData, e621SpecificTags, </param>
     public void SaveData(string type)
     {
         BinaryFormatter bf = new BinaryFormatter();
@@ -104,6 +121,11 @@ public class Data : MonoBehaviour
             case "e621CharacterData":
                 file = File.Create(Application.persistentDataPath + "/Character.DATA");
                 bf.Serialize(file, e621CharacterData);
+                file.Close();
+                break;
+            case "e621SpecificTags":
+                file = File.Create(Application.persistentDataPath + "/SpecificTags.DATA");
+                bf.Serialize(file, e621SpecificTags);
                 file.Close();
                 break;
         }
