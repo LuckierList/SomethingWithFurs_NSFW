@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Linq;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using UnityEngine.UI;
 
 public class Data : MonoBehaviour
 {
@@ -15,6 +16,14 @@ public class Data : MonoBehaviour
     public List<E621CharacterData> e621CharacterData;
     [HideInInspector]
     public List<string> e621SpecificTags;
+    [HideInInspector]
+    public List<string> e621Blacklist;
+
+    [Header("Visual")]
+    public GameObject objLoad;
+    public Image imageLoadProgress;
+    public Text textLoad;
+    public Transform transLoad;
 
     private void Awake()
     {
@@ -41,6 +50,7 @@ public class Data : MonoBehaviour
         LoadData("imageData");
         LoadData("e621CharacterData");
         LoadData("e621SpecificTags");
+        LoadData("e621Blacklist");
         print("Reloaded All Data");
     }
 
@@ -93,6 +103,19 @@ public class Data : MonoBehaviour
                     e621SpecificTags = new List<string>();
                 }
                 break;
+            case "e621Blacklist":
+                if (File.Exists(Application.persistentDataPath + "/Blacklist.DATA"))
+                {
+                    file = File.Open(Application.persistentDataPath + "/Blacklist.DATA", FileMode.Open);
+                    e621Blacklist = (List<string>)bf.Deserialize(file);
+                    file.Close();
+                }
+                else
+                {
+                    print("File 'Blacklist.DATA' doesn't exist.");
+                    e621Blacklist = new List<string>();
+                }
+                break;
         }
     }
 
@@ -101,6 +124,7 @@ public class Data : MonoBehaviour
         SaveData("imageData");
         SaveData("e621CharacterData");
         SaveData("e621SpecificTags");
+        SaveData("e621Blacklist");
     }
 
     /// <summary>
@@ -126,6 +150,11 @@ public class Data : MonoBehaviour
             case "e621SpecificTags":
                 file = File.Create(Application.persistentDataPath + "/SpecificTags.DATA");
                 bf.Serialize(file, e621SpecificTags);
+                file.Close();
+                break;
+            case "e621Blacklist":
+                file = File.Create(Application.persistentDataPath + "/Blacklist.DATA");
+                bf.Serialize(file, e621Blacklist);
                 file.Close();
                 break;
         }

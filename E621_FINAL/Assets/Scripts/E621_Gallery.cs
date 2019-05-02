@@ -43,6 +43,7 @@ public class E621_Gallery : GlobalActions
     public Text textTagLeaderCategories, textTagLeaderContent, textTagLeaderHighlight;
     public Button buttonExitTagLeader;
     public Slider sliderTagLeader;
+    Thread threadTagLeaderboard;
 
     public Text textImageCount;
 
@@ -68,6 +69,7 @@ public class E621_Gallery : GlobalActions
 
     private void Start()
     {
+        threadTagLeaderboard = new Thread(new ThreadStart(TagLeaderBoardCalculateThread));
         ButtonSizeManager(0, false);
         ButtonAction("configApply");
     }
@@ -94,7 +96,7 @@ public class E621_Gallery : GlobalActions
     }
 
     //----------------------------------------------------
-    //Main UI 
+    #region Main UI 
     void SetNavigationButtons(bool next, bool prev, bool last, bool first)
     {
         buttonNext.interactable = next;
@@ -132,8 +134,58 @@ public class E621_Gallery : GlobalActions
             ShowPage(0);
         }
     }
+
+    public void ShowPage(int page)
+    {
+        if (currentPage == 0)
+            SetNavigationButtons(true, false, true, false);
+
+        ClearGridChilds();
+        Resources.UnloadUnusedAssets();
+        //print("SHow page");
+        /*
+        E621_CharacterButton b = prefabCharButton.GetComponent<E621_CharacterButton>();
+        */
+        float contDelay = 0f;
+        E621_GalleryButton b = prefabButtonGal.GetComponent<E621_GalleryButton>();
+
+
+        for (int i = 0; i < imagesPerPage; i++)
+        {
+            int correctID = i + (imagesPerPage * currentPage);
+            //print("for");
+
+            if (!useFilter)
+            {
+                if (correctID >= showFiles.Count) break;
+
+                b.textName.text = Path.GetFileNameWithoutExtension(showFiles[correctID]);
+
+
+                b.url = showFiles[correctID];
+                b.imageShower = imageShower;
+                b.delay = contDelay;
+            }
+            else
+            {
+                if (correctID >= showFilesFilter.Count) break;
+
+                b.textName.text = Path.GetFileNameWithoutExtension(showFilesFilter[correctID]);
+
+                b.url = showFilesFilter[correctID];
+                b.imageShower = imageShower;
+                b.delay = contDelay;
+            }
+
+            Instantiate(prefabButtonGal, objGridParent.transform);
+
+            contDelay += 0.001f;
+        }
+
+    }
+    #endregion
     //----------------------------------------------------
-    //Filterers
+    #region Filterers
     public void InputFilterAdd(string value)
     {
         value = value.ToLower();
@@ -181,9 +233,9 @@ public class E621_Gallery : GlobalActions
         buttonSlideshow.interactable = value;
         buttonTags.interactable = value;
     }
-
+    #endregion
     //----------------------------------------------------
-    //Tags
+    #region Tags
     public void TagsDefault()
     {
         List<string> newOptions = new List<string>();
@@ -268,8 +320,9 @@ public class E621_Gallery : GlobalActions
         Data.act.SaveData("e621SpecificTags");
     }
 
+    #endregion
     //----------------------------------------------------
-    //Tags Leaderboar
+    #region Tags Leaderboar
     public class TagLeaderboard
     {
         public string tagName;
@@ -291,9 +344,14 @@ public class E621_Gallery : GlobalActions
         textTagLeaderCategories.text = string.Format(categories, "---", "---", "---", "---");
         textTagLeaderHighlight.text = string.Format(highlight, "---", "---", "---", "---", "---");
         textTagLeaderContent.text = "---";
-        buttonExitTagLeader.interactable = false;
-        Thread t = new Thread(new ThreadStart(TagLeaderBoardCalculateThread));
-        t.Start();
+        buttonExitTagLeader.interactable = true;
+        if (threadTagLeaderboard.IsAlive)
+        {
+            CreateAdvice("Thread currently active.");
+            return;
+        }
+        threadTagLeaderboard = new Thread(new ThreadStart(TagLeaderBoardCalculateThread));
+        threadTagLeaderboard.Start();
     }
 
     void TagLeaderBoardCalculateThread()
@@ -339,6 +397,7 @@ public class E621_Gallery : GlobalActions
         });
     }
 
+    #endregion
     //----------------------------------------------------
 
     public void ButtonAction(string value)
@@ -506,54 +565,7 @@ public class E621_Gallery : GlobalActions
         });
     }
 
-    public void ShowPage(int page)
-    {
-        if (currentPage == 0)
-            SetNavigationButtons(true, false, true, false);
-
-        ClearGridChilds();
-        Resources.UnloadUnusedAssets();
-        //print("SHow page");
-        /*
-        E621_CharacterButton b = prefabCharButton.GetComponent<E621_CharacterButton>();
-        */
-        float contDelay = 0f;
-        E621_GalleryButton b = prefabButtonGal.GetComponent<E621_GalleryButton>();
-
-        
-        for (int i = 0; i < imagesPerPage; i++)
-        {
-            int correctID = i + (imagesPerPage * currentPage);
-            //print("for");
-
-            if(!useFilter)
-            {
-                if (correctID >= showFiles.Count) break;
-
-                b.textName.text = Path.GetFileNameWithoutExtension(showFiles[correctID]);
-
-
-                b.url = showFiles[correctID];
-                b.imageShower = imageShower;
-                b.delay = contDelay;
-            }
-            else
-            {
-                if (correctID >= showFilesFilter.Count) break;
-
-                b.textName.text = Path.GetFileNameWithoutExtension(showFilesFilter[correctID]);
-
-                b.url = showFilesFilter[correctID];
-                b.imageShower = imageShower;
-                b.delay = contDelay;
-            }
-            
-            Instantiate(prefabButtonGal, objGridParent.transform);
-            
-            contDelay += 0.001f;
-        }
-        
-    }
+    
 
     void FilterPages()
     {
@@ -561,6 +573,7 @@ public class E621_Gallery : GlobalActions
         foreach (ImageData data in Data.act.imageData)
         {
             bool canAdd = false;
+
 
             if (!toggleIncludeDickgirl.isOn && (data.tags.Contains("dickgirl") || data.tags.Contains("intersex") || data.tags.Contains("herm")))
                 continue;
@@ -588,7 +601,7 @@ public class E621_Gallery : GlobalActions
                 }
             }
 
-            if (canAdd)
+            if (canAdd || (dropFilter.options.Count == 1 && !(toggleIncludeDickgirl.isOn && toggleIncludeStraight.isOn)))
             {
                 string url = "";
 
@@ -607,7 +620,7 @@ public class E621_Gallery : GlobalActions
         }
 
         useFilter = true;
-        if (showFilesFilter.Count == 0 && toggleIncludeStraight.isOn && toggleIncludeDickgirl.isOn)
+        if (showFilesFilter.Count == 0)// && toggleIncludeStraight.isOn && toggleIncludeDickgirl.isOn)
         {
             CreateAdvice("No images exist, filter skipped!");
             useFilter = false;
@@ -702,7 +715,7 @@ public class E621_Gallery : GlobalActions
     }
 
     //----------------------------------------------------------
-    //Slideshow
+    #region Slideshow
 
     public void SlideshowStart()
     {
@@ -750,11 +763,13 @@ public class E621_Gallery : GlobalActions
 
         objHourglass.SetActive(false);
         objSlideshow.SetActive(false);
+
+        buttonSlideshow.interactable = true;
     }
 
     public void ButtonSlideShowReturn()
     {
-        slideShowReturn++;
+        slideShowReturn += 2;
     }
     
     IEnumerator SlideShow()
@@ -840,5 +855,10 @@ public class E621_Gallery : GlobalActions
         objHourglass.SetActive(false);
         objSlideshow.SetActive(false);
     }
+    #endregion
     //----------------------------------------------------------
+    private void OnDestroy()
+    {
+        if (threadTagLeaderboard.IsAlive) threadTagLeaderboard.Abort();
+    }
 }

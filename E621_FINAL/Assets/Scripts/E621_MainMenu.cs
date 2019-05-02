@@ -62,6 +62,9 @@ public class E621_MainMenu : GlobalActions
                 imageOpPortrait.sprite = imgDatabase;
                 textOp.text = "Add tags to images you'll add to the Gallery. Also pens an editor to add Characters/Artists tags.";
                 break;
+            case "navigation":
+                textOp.text = "Browse images from E621, you can also download them and/or start a download queue with certain tags.";
+                break;
             case "saveAll":
                 textOp.text = "Overwrite all current save data with the changes done in this session. EVERYTHING will be overwriten.";
                 break;

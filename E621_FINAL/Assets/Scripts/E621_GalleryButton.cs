@@ -46,7 +46,7 @@ public class E621_GalleryButton : MonoBehaviour
     public void ButtonShowImage()
     {
         imageShower.sprite = newSprite;
-        imageShower.gameObject.SetActive(true);
+        imageShower.transform.parent.gameObject.SetActive(true);
     }
 
     public void ButtonOpenInPage()
@@ -80,8 +80,8 @@ public class E621_GalleryButton : MonoBehaviour
                 }
                 else
                 {
-                    newTexture = DownloadHandlerTexture.GetContent(uwr);
-                    newSprite = Sprite.Create(newTexture, new Rect(0f, 0f, newTexture.width, newTexture.height), new Vector2(.5f, .5f), 100f);
+                    yield return newTexture = DownloadHandlerTexture.GetContent(uwr);
+                    yield return newSprite = Sprite.Create(newTexture, new Rect(0f, 0f, newTexture.width, newTexture.height), new Vector2(.5f, .5f), 100f);
                     imageThumb.sprite = newSprite;
                 }
             }

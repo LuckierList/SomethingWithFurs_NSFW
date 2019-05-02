@@ -20,4 +20,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/E621/E621_Gallery.unity
     guid: 9c8e1adce3e6f4c4d83710be2d612e88
+  - enabled: 1
+    path: Assets/Scenes/E621/E621_Navigator.unity
+    guid: 8dafe030687b7684698803b955235264
   m_configObjects: {}

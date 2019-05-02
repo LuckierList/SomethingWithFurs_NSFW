@@ -212,8 +212,8 @@ public class GlobalActions : MonoBehaviour
                 }
                 else
                 {
-                    newTexture = DownloadHandlerTexture.GetContent(uwr);
-                    newSprite = Sprite.Create(newTexture, new Rect(0f, 0f, newTexture.width, newTexture.height), new Vector2(.5f, .5f), 100f);
+                    yield return newTexture = DownloadHandlerTexture.GetContent(uwr);
+                    yield return newSprite = Sprite.Create(newTexture, new Rect(0f, 0f, newTexture.width, newTexture.height), new Vector2(.5f, .5f), 100f);
                     image.sprite = newSprite;
                     if (clear) Resources.UnloadUnusedAssets();
                 }
@@ -325,6 +325,9 @@ public class GlobalActions : MonoBehaviour
             case "database":
                 //CreateAdvice("The database editor has not been implemented yet.");
                 SceneManager.LoadSceneAsync("E621_Database");
+                break;
+            case "navigation":
+                SceneManager.LoadSceneAsync("E621_Navigator");
                 break;
             default:
                 CreateAdvice("What the...?", "Something went horribly wrong here...");
