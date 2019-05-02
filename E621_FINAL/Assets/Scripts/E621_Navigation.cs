@@ -28,12 +28,14 @@ public class E621_Navigation : GlobalActions
     public Transform transformNavigation;
     public GameObject objLoadPageHourglass;
     Coroutine pageLoadCo;
+    public Coroutine previewLoadCo;
 
     public InputField inputSearchField, inputGoToPage;
     public Button buttonSearch, buttonNext, buttonPrev;
     public Text textCurrentPage;
     string currentTags;
-    int currentPage = 1;
+    int lastPage = 0;
+    int currentPage = 0;
 
     Thread threadPageLoad;
     string html = "";
@@ -42,7 +44,8 @@ public class E621_Navigation : GlobalActions
     #region PreviewDownloader
     [Header("Preview Downloader")]
     public GameObject objPreviewViewer;
-    List<string> previewURLs = new List<string>();
+    public Image imagePreview;
+    //List<string> previewURLs = new List<string>();
     #endregion
 
     #region DownloadHandler
@@ -65,6 +68,7 @@ public class E621_Navigation : GlobalActions
     public Sprite imgBlank;
     public Sprite imgLoading, imgError, imgHourGlass, imgViewLocked;
     public Toggle toggleBlacklistHide;
+    public Button buttonReturn;
     #endregion
 
     public new static E621_Navigation act;
@@ -74,13 +78,17 @@ public class E621_Navigation : GlobalActions
         act = this;
         LoadBlacklist();
         threadPageLoad = new Thread(new ThreadStart(ThreadedLoadPage));
+        buttonNext.interactable = false;
+        buttonPrev.interactable = false;
+        
     }
 	
 	// Update is called once per frame
 	void Update ()
     {
-		
-	}
+        inputGoToPage.interactable = currentPage != 0;
+        textCurrentPage.text = lastPage == 0 ? "Current Page:\n0/0" : "Current Page:\n" + currentPage + "/" + lastPage;
+    }
 
     #region PageLoad Functions
 
@@ -91,6 +99,9 @@ public class E621_Navigation : GlobalActions
 
     void LoadPage()
     {
+        buttonSearch.interactable = false;
+        buttonReturn.interactable = false;
+        ClearViewer();
         StopLoadPageCo();
         if (threadPageLoad.IsAlive) threadPageLoad.Abort();
         pageLoadCo = StartCoroutine(LoadPageCoroutine());
@@ -99,8 +110,7 @@ public class E621_Navigation : GlobalActions
     IEnumerator LoadPageCoroutine()
     {
         yield return null;
-        ClearViewer();
-
+        inputSearchField.text = currentTags;
         string url = @"https://e621.net/post/index/" + currentPage + "/" +  currentTags;
 
         objLoadPageHourglass.SetActive(true);
@@ -121,6 +131,7 @@ public class E621_Navigation : GlobalActions
             {
                 objLoadPageHourglass.transform.GetChild(0).GetComponent<Image>().sprite = imgError;
                 buttonSearch.interactable = false;
+                buttonReturn.interactable = true;
                 CreateAdvice(uwr.error, 2);
                 Debug.Log(uwr.error);
                 uwr.Dispose();
@@ -133,7 +144,26 @@ public class E621_Navigation : GlobalActions
             }
         }
         Resources.UnloadUnusedAssets();
-        
+
+        //obtener la ultima pagina
+        if (html.IndexOf("Last Page") != -1)
+        {
+            string last = html.Substring(0, html.IndexOf("Last Page"));
+            print(last);
+            last = last.Substring(last.LastIndexOf("href=") + 6, last.Length - (last.LastIndexOf("href=") + 6));
+            print(last);
+            last = last.Substring(last.IndexOf("index") + 6, last.Length - (last.IndexOf("index") + 6));
+            print(last);
+            if (currentTags != "")
+                last = last.Substring(0, last.IndexOf("/"));
+            else
+                last = last.Substring(0, last.IndexOf("rel") - 2);
+
+            lastPage = int.Parse(last);
+        }
+        else
+            lastPage = 1;
+
         //substring para obtener los datos de los posts
         html = html.Substring(html.IndexOf("Post.register({"), html.Length - html.IndexOf("Post.register({"));
         html = html.Substring(0, html.IndexOf("Post.blacklist_options ="));
@@ -160,6 +190,9 @@ public class E621_Navigation : GlobalActions
         while (html.IndexOf("Post.register({") != -1)
         {
             UnityThread.executeInUpdate(() => { print("LEL"); });
+
+            
+
             html = html.Substring(html.IndexOf("Post.register({"), html.Length - html.IndexOf("Post.register({"));
             //eliminar el post register actual para no ciclarse infinitamente
             html = html.Substring(15, html.Length - 15);
@@ -194,37 +227,37 @@ public class E621_Navigation : GlobalActions
             html = html.Substring(html.IndexOf("md5") + 6, html.Length - (html.IndexOf("md5") + 6));
             //MD5
             md5 = html.Substring(0, html.IndexOf(",") - 1);
-            print("MD5: " + md5);
+            //print("MD5: " + md5);
             html = html.Substring(html.IndexOf("file_url") + 11, html.Length - (html.IndexOf("file_url") + 11));
 
             //Image URL
             urlDownload = html.Substring(0, html.IndexOf(",") - 1);
-            print(urlDownload);
+            //print(urlDownload);
             html = html.Substring(html.IndexOf("preview_url") + 14, html.Length - (html.IndexOf("preview_url") + 14));
 
             //Thumb URL
             urlThumb = html.Substring(0, html.IndexOf(",") - 1);
-            print(urlThumb);
+            //print(urlThumb);
             html = html.Substring(html.IndexOf("sample_url") + 13, html.Length - (html.IndexOf("sample_url") + 13));
 
-            //Thumb URL
+            //Preview URL
             urlPreview = html.Substring(0, html.IndexOf(",") - 1);
-            print(urlPreview);
+            //print(urlPreview);
             html = html.Substring(html.IndexOf("rating") + 9, html.Length - (html.IndexOf("rating") + 9));
 
             //Rating
             rating = html.Substring(0, html.IndexOf(",") - 1);
-            print(rating);
+            //print(rating);
             html = html.Substring(html.IndexOf("rating") + 9, html.Length - (html.IndexOf("rating") + 9));
 
             //Rating
             rating = html.Substring(0, html.IndexOf(",") - 1);
-            print(rating);
+            //print(rating);
             html = html.Substring(html.IndexOf("status") + 9, html.Length - (html.IndexOf("status") + 9));
 
             //Status
             status = html.Substring(0, html.IndexOf(",") - 1);
-            print(status);
+            //print(status);
 
             //Spawn Button
             bool end = false;
@@ -246,14 +279,21 @@ public class E621_Navigation : GlobalActions
             });
             while (!end) { }
         }
+
+        UnityThread.executeInUpdate(() =>
+        {
+            buttonSearch.interactable = true;
+            buttonReturn.interactable = true;
+        });
     }
 
     public void ClearViewer()
     {
         objLoadPageHourglass.SetActive(false);
-        for (int i = 0; i < transformNavigation.childCount; i++)
+        print(transformNavigation.childCount);
+        for (int i = transformNavigation.childCount - 1; i >= 0; i--)
         {
-            Destroy(transformNavigation.GetChild(0).gameObject);
+            Destroy(transformNavigation.GetChild(i).gameObject);
         }
     }
     #endregion
@@ -303,9 +343,22 @@ public class E621_Navigation : GlobalActions
             case "search":
                 currentTags = inputSearchField.text;
                 currentPage = 1;
+                buttonNext.interactable = true;
+                buttonPrev.interactable = false;
                 LoadPage();
                 break;
-            
+            case "next":
+                currentPage++;
+                buttonNext.interactable = currentPage != lastPage;
+                buttonPrev.interactable = true;
+                LoadPage();
+                break;
+            case "prev":
+                currentPage--;
+                buttonPrev.interactable = currentPage != 1;
+                buttonNext.interactable = lastPage != 1;
+                LoadPage();
+                break;
         }
     }
 

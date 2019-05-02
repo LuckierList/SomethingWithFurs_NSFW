@@ -58,6 +58,8 @@ public class E621_NavigationButton : MonoBehaviour
         }
         imageAnim.gameObject.SetActive(tags.Contains("animated"));
         buttonBlacklisted.gameObject.SetActive(!canAppear);
+
+        CheckExistance();
     }
 
     public void ButtonBlacklistShow()
@@ -73,6 +75,18 @@ public class E621_NavigationButton : MonoBehaviour
             t += s + "   ";
         }
         GlobalActions.act.CreateAdvice("Tags",t,2);
+    }
+
+    public void ButtonLoadPreview()
+    {
+        if (imagePreview.sprite == imgBlacklist || tags.Contains("animated")) return;
+        E621_Navigation.act.objPreviewViewer.SetActive(true);
+        if(E621_Navigation.act.previewLoadCo != null)
+        {
+            StopCoroutine(E621_Navigation.act.previewLoadCo);
+            E621_Navigation.act.previewLoadCo = null;
+        }
+        E621_Navigation.act.previewLoadCo = StartCoroutine(GetImage(urlPreview, E621_Navigation.act.imagePreview));
     }
 
     IEnumerator GetImage(string url, Image target)
@@ -101,5 +115,24 @@ public class E621_NavigationButton : MonoBehaviour
     {
         Debug.LogAssertion("Destroy button");
         if (activeCo != null) StopCoroutine(activeCo);
+    }
+
+    void CheckExistance()
+    {
+        Thread t = new Thread(new ThreadStart(CheckExistanceThread));
+        t.Start();
+        buttonKeep.interactable = false;
+        buttonFilter.interactable = false;
+    }
+
+    void CheckExistanceThread()
+    {
+        ImageData load = Data.act.imageData.Where(temp => temp.filename.ToLower().Substring(0, temp.filename.IndexOf(".")) == md5).SingleOrDefault();
+        print(md5);
+        UnityThread.executeInUpdate(() =>
+        {
+            buttonKeep.interactable = load == null || load.filtered;
+            buttonFilter.interactable = load == null || !load.filtered;
+        });
     }
 }
