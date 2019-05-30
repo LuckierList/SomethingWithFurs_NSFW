@@ -197,7 +197,11 @@ public class E621_NavigationButton : MonoBehaviour
             string sUrl = "null";
             UnityThread.executeInUpdate(() =>
             {
-                sUrl = !(tags.Contains("intersex") || tags.Contains("dickgirl") || tags.Contains("herm")) ? PlayerPrefs.GetString("E621_StraightMainGal") : PlayerPrefs.GetString("E621_DickgirlMainGal");
+                sUrl = !(tags.Contains("intersex") || tags.Contains("dickgirl") || tags.Contains("herm")) ? E621_Navigation.act.inputStraightGal.text : E621_Navigation.act.inputDickgirlGal.text;
+                if (tags.Contains("animated"))
+                {
+                    if (sUrl == E621_Navigation.act.inputStraightGal.text) sUrl = E621_Navigation.act.inputStraightVid.text; else sUrl = E621_Navigation.act.inputDickgirlVid.text;
+                }
             });
             while (sUrl == "null") { }
 
@@ -262,16 +266,34 @@ public class E621_NavigationButton : MonoBehaviour
             return;
         }
 
-        if ((tags.Contains("dickgirl") || tags.Contains("intersex") || tags.Contains("herm")) && PlayerPrefs.GetString("E621_DickgirlMainGal") == "")
+        if (!tags.Contains("animated"))
         {
-            E621_Navigation.act.CreateAdvice("Dickgirl Gal doesn't exist", "Can´t Keep/Filter the iamge because it's 'Dickgirl' related and the gallery has not been assigned.");
-            return;
-        }
+            if ((tags.Contains("dickgirl") || tags.Contains("intersex") || tags.Contains("herm")) && E621_Navigation.act.inputDickgirlGal.text == "")
+            {
+                E621_Navigation.act.CreateAdvice("Dickgirl Gal doesn't exist", "Can´t Keep/Filter the iamge because it's 'Dickgirl' related and the gallery has not been assigned.");
+                return;
+            }
 
-        if (!((tags.Contains("dickgirl") || tags.Contains("intersex") || tags.Contains("herm"))) && PlayerPrefs.GetString("E621_StraightMainGal") == "")
+            if (!((tags.Contains("dickgirl") || tags.Contains("intersex") || tags.Contains("herm"))) && E621_Navigation.act.inputStraightGal.text == "")
+            {
+                E621_Navigation.act.CreateAdvice("Straight Gal doesn't exist", "Can´t Keep/Filter the iamge because it's NOT 'Dickgirl' related and the gallery has not been assigned.");
+                return;
+            }
+        }
+        else
         {
-            E621_Navigation.act.CreateAdvice("Straight Gal doesn't exist", "Can´t Keep/Filter the iamge because it's NOT 'Dickgirl' related and the gallery has not been assigned.");
-            return;
+            if ((tags.Contains("dickgirl") || tags.Contains("intersex") || tags.Contains("herm")) && E621_Navigation.act.inputDickgirlVid.text == "")
+            {
+                E621_Navigation.act.CreateAdvice("Dickgirl Gal doesn't exist", "Can´t Keep/Filter the iamge because it's 'Dickgirl' related and the gallery has not been assigned.");
+                return;
+            }
+
+            if (!((tags.Contains("dickgirl") || tags.Contains("intersex") || tags.Contains("herm"))) && E621_Navigation.act.inputStraightVid.text == "")
+            {
+                E621_Navigation.act.CreateAdvice("Straight Gal doesn't exist", "Can´t Keep/Filter the iamge because it's NOT 'Dickgirl' related and the gallery has not been assigned.");
+                return;
+            }
+
         }
 
         //--------------------------

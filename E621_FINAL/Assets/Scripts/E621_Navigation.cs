@@ -42,6 +42,11 @@ public class E621_Navigation : GlobalActions
 
     Thread threadPageLoad;
     string html = "";
+
+    Coroutine checkExistanceCo;
+    [HideInInspector]
+    public Queue<E621_NavigationButton> queueExistance = new Queue<E621_NavigationButton>();
+
     #endregion
 
     #region PreviewDownloader
@@ -74,6 +79,13 @@ public class E621_Navigation : GlobalActions
     public Button buttonReturn;
     #endregion
 
+    #region Configuration
+    [Header("Configuration")]
+    public InputField inputStraightGal;
+    public InputField inputDickgirlGal, inputStraightVid, inputDickgirlVid;
+
+    #endregion
+
     public new static E621_Navigation act;
     // Use this for initialization
     void Start ()
@@ -87,6 +99,8 @@ public class E621_Navigation : GlobalActions
         buttonPrev.interactable = false;
 
         Data.act.tagSelectorFunc += SendTagToSearch;
+
+        SetSourcesToDefault();
     }
 	
 	// Update is called once per frame
@@ -331,6 +345,37 @@ public class E621_Navigation : GlobalActions
             Destroy(transformNavigation.GetChild(i).gameObject);
         }
     }
+
+    public IEnumerator CheckExistanceQueue()
+    {
+        while (true)
+        {
+            yield return null;
+            if (queueExistance.Count != 0)
+            {
+                E621_NavigationButton b = queueExistance.Dequeue();
+                b.existanceChecked = false;
+                b.CheckExistance();
+                float waitTime = Time.time + 3f;
+                int maxTries = 3, currentTries = 1;
+                do
+                {
+                    yield return null;
+                    if (waitTime <= Time.time && !b.existanceChecked && maxTries < currentTries)
+                    {
+                        waitTime = Time.time + 3f;
+                        print("Retry");
+                        currentTries++;
+                    }
+                    else if (!b.existanceChecked && maxTries >= currentTries)
+                    {
+                        b.imageExistance.color = Color.magenta;
+                    }
+                }
+                while (waitTime > Time.time && !b.existanceChecked);
+            }
+        }
+    }
     #endregion
 
     #region Blacklist Funtions
@@ -371,6 +416,7 @@ public class E621_Navigation : GlobalActions
 
     #endregion
 
+    #region Navigation Functions
     public void ButtonAction(string value)
     {
         if (threadPageLoad.IsAlive) return;
@@ -408,7 +454,9 @@ public class E621_Navigation : GlobalActions
         if (inputSearchField.text != "") inputSearchField.text += " ";
         inputSearchField.text += theTag;
     }
+    #endregion
 
+    #region Downloading Funcitons
     public void OnPointerEnter()
     {
         Vector3 newPos = downloaderContent.anchoredPosition;
@@ -451,11 +499,11 @@ public class E621_Navigation : GlobalActions
 
                 //string targetUrl = @"D:\HardDrive\No pls\e621\Te lo advierto\Tools\test";
                 string targetUrl = !(downloaded.tags.Contains("dickgirl") || downloaded.tags.Contains("intersex") || downloaded.tags.Contains("herm"))
-                    ? PlayerPrefs.GetString("E621_StraightMainGal") : PlayerPrefs.GetString("E621_DickgirlMainGal");
+                    ? inputStraightGal.text : inputDickgirlGal.text;
 
                 if (downloaded.tags.Contains("animated"))
                 {
-                    targetUrl = (!targetUrl.Contains("Dickgirl") ? @"D:\HardDrive\No pls\e621\Te lo advierto\Tools\test\Straight" : @"D:\HardDrive\No pls\e621\Te lo advierto\Tools\test\Dickgirl");
+                    targetUrl = !targetUrl.Contains("Dickgirl") ? inputStraightVid.text : inputDickgirlVid.text;
                 }
                 File.WriteAllBytes(targetUrl + "/" + filename, result);
                 print(targetUrl);
@@ -480,47 +528,34 @@ public class E621_Navigation : GlobalActions
         
     }
 
+    #endregion
+
+    #region Configuration Functions
+    public void SetSourcesToDefault()
+    {
+        inputStraightGal.text = PlayerPrefs.GetString("E621_StraightMainGal");
+        inputDickgirlGal.text = PlayerPrefs.GetString("E621_DickgirlMainGal");
+        inputStraightVid.text = PlayerPrefs.GetString("E621_StraightMainVidGal");
+        inputDickgirlVid.text = PlayerPrefs.GetString("E621_DickgirlMainVidGal");
+    }
+
+    public void ConfigApply()
+    {
+        if (!Directory.Exists(inputStraightGal.text)) inputStraightGal.text = ""; else PlayerPrefs.SetString("E621_StraightMainGal", inputStraightGal.text);
+        if (!Directory.Exists(inputDickgirlGal.text)) inputDickgirlGal.text = ""; else PlayerPrefs.SetString("E621_DickgirlMainGal", inputDickgirlGal.text);
+        if (!Directory.Exists(inputStraightVid.text)) inputStraightVid.text = ""; else PlayerPrefs.SetString("E621_StraightMainVidGal", inputStraightVid.text);
+        if (!Directory.Exists(inputDickgirlVid.text)) inputDickgirlVid.text = ""; else PlayerPrefs.SetString("E621_DickgirlMainVidGal", inputDickgirlVid.text);
+    }
+    #endregion
+
     public void SaveDataPopUp()
     {
-        CreateAdvice("Exit and Save", "Would you like to save the Image Data?", 0, () =>
+        CreateAdvice("Would you like to save the Image Data?", 0, () =>
          {
              Data.act.SaveData("imageData");
          });
     }
-
-    Coroutine checkExistanceCo;
-    public Queue<E621_NavigationButton> queueExistance = new Queue<E621_NavigationButton>();
-
-    public IEnumerator CheckExistanceQueue()
-    {
-        while (true)
-        {
-            yield return null;
-            if(queueExistance.Count != 0)
-            {
-                E621_NavigationButton b = queueExistance.Dequeue();
-                b.existanceChecked = false;
-                b.CheckExistance();
-                float waitTime = Time.time + 3f;
-                int maxTries = 3, currentTries = 1;
-                do
-                {
-                    yield return null;
-                    if(waitTime <= Time.time && !b.existanceChecked && maxTries < currentTries)
-                    {
-                        waitTime = Time.time + 3f;
-                        print("Retry");
-                        currentTries++;
-                    }
-                    else if(!b.existanceChecked && maxTries >= currentTries)
-                    {
-                        b.imageExistance.color = Color.magenta;
-                    }
-                }
-                while (waitTime > Time.time && !b.existanceChecked);
-            }
-        }
-    }
+    
 
     private void OnDestroy()
     {
