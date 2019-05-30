@@ -30,7 +30,16 @@ public class Data : MonoBehaviour
     public GameObject objLoad;
     public Text textLoad;
     public Animation animLoad;
-    
+
+    [Header("Tag Handler")]
+    public GameObject objTagHandler;
+    public Dropdown dropTagsChar;
+    public Dropdown dropTagsArtist;
+    public Dropdown dropTagsSpecific;
+    public InputField inputTagsSpecific;
+    public Toggle toggleTagsDelete;
+    public delegate void TagSelectorFunc(string theTag);
+    public TagSelectorFunc tagSelectorFunc;
 
     private void Awake()
     {
@@ -55,6 +64,7 @@ public class Data : MonoBehaviour
         //InitialLoadData();
     }
 
+    #region Main Data Functions
     IEnumerator DataLoader()
     {
         while (true)
@@ -67,7 +77,7 @@ public class Data : MonoBehaviour
                 //print("Load:" + loadName);
                 textLoad.text = "Loading:\n" + loadName;
                 objLoad.SetActive(true);
-                animLoad.Play("LoadProgressHourGlass_Rotate");
+                //animLoad.Play("LoadProgressHourGlass_Rotate");
                 loadThread = new Thread(new ThreadStart(LoadDataThreaded));
                 loadThread.Start();
             }
@@ -85,7 +95,7 @@ public class Data : MonoBehaviour
                 //print("Save:" + loadName);
                 textLoad.text = "Saving:\n" + loadName;
                 objLoad.SetActive(true);
-                animLoad.Play("LoadProgressHourGlass_Rotate");
+                //animLoad.Play("LoadProgressHourGlass_Rotate");
                 loadThread = new Thread(new ThreadStart(SaveDataThreaded));
                 loadThread.Start();
             }
@@ -218,4 +228,105 @@ public class Data : MonoBehaviour
         }
         loadThread = null;
     }
+    #endregion
+
+    #region Tag Selector
+    //----------------------------------------------------
+    #region Tags
+
+    public void TagsOpenGameObject()
+    {
+        TagsDefault();
+        objTagHandler.SetActive(true);
+    }
+
+    public void TagsDefault()
+    {
+        List<string> newOptions = new List<string>();
+        foreach (E621CharacterData dat in Data.act.e621CharacterData)
+        {
+            newOptions.Add(dat.tag);
+        }
+        newOptions.Sort();
+        newOptions.Insert(0, "Select");
+        dropTagsChar.ClearOptions();
+        dropTagsChar.AddOptions(newOptions);
+
+        newOptions.Clear();
+
+        //create tags options here
+
+        TagsDefaultSpecific();
+    }
+
+    public void DropAddTagCharacter(int value)
+    {
+        if (value == 0) return;
+        tagSelectorFunc(dropTagsChar.options[value].text);
+        dropTagsChar.value = 0;
+        dropTagsChar.RefreshShownValue();
+        
+    }
+
+    public void DropAddTagArtist(int value)
+    {
+        if (value == 0) return;
+        dropTagsArtist.value = 0;
+        dropTagsArtist.RefreshShownValue();
+        tagSelectorFunc(dropTagsArtist.options[value].text);
+    }
+
+    public void DropAddTagSpecific(int value)
+    {
+        if (value == 0) return;
+        if (!toggleTagsDelete.isOn)
+        {
+            dropTagsSpecific.value = 0;
+            dropTagsSpecific.RefreshShownValue();
+            tagSelectorFunc(dropTagsSpecific.options[value].text);
+        }
+        else
+        {
+            dropTagsSpecific.value = 0;
+            dropTagsSpecific.RefreshShownValue();
+            GlobalActions.act.CreateAdvice("Delete the selected tag?\n" + dropTagsSpecific.options[value].text, 0, () =>
+            {
+                e621SpecificTags.Remove(dropTagsSpecific.options[value].text);
+                TagsDefaultSpecific();
+            });
+        }
+    }
+
+    void TagsDefaultSpecific()
+    {
+        List<string> newOptions = new List<string>();
+        foreach (string s in Data.act.e621SpecificTags)
+        {
+            newOptions.Add(s);
+        }
+        newOptions.Sort();
+        newOptions.Insert(0, "Select");
+        dropTagsSpecific.ClearOptions();
+        dropTagsSpecific.AddOptions(newOptions);
+    }
+
+    public void InputAddTagSpecific(string value)
+    {
+        inputTagsSpecific.text = "";
+        if (value != "" && !value.Contains(" ") && !Data.act.e621SpecificTags.Contains(value))
+        {
+            e621SpecificTags.Add(value);
+            TagsDefaultSpecific();
+        }
+    }
+
+    public void ButtonExitTags()
+    {
+        SaveData("e621SpecificTags");
+    }
+
+
+    #endregion
+    //----------------------------------------------------
+    #endregion
 }

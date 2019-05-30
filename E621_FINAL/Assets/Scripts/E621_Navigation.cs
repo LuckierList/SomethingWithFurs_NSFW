@@ -9,14 +9,17 @@ using System.Threading;
 
 public class DownloadImage
 {
-    public int id;
+    public ImageData data;
     public Coroutine thisCoroutine;
-    public GameObject objHourglass;
-    public DownloadImage(int _id, GameObject _objHourglass)
+    public GameObject objProgress;
+    public DownloadImage(string urlDownlaod, E621_NavigationButton origin, Sprite sprPrev, ImageData _data, GameObject _objProgress)
     {
-        id = _id;
-        objHourglass = _objHourglass;
+        data = _data;
+        objProgress = _objProgress;
+        E621_Navigation.act.StartCoroutine(E621_Navigation.act.DownloadImageCo(urlDownlaod,sprPrev, objProgress, data, origin));
     }
+
+
 }
 
 public class E621_Navigation : GlobalActions
@@ -51,8 +54,8 @@ public class E621_Navigation : GlobalActions
     #region DownloadHandler
     [Header("Download Handler")]
     public GameObject prefabDownloading;
-    public Transform downloaderContent;
-    List<DownloadImage> listCoroutines = new List<DownloadImage>();
+    public RectTransform downloaderContent;
+    public List<DownloadImage> listCoroutines = new List<DownloadImage>();
 
     #endregion
 
@@ -76,11 +79,14 @@ public class E621_Navigation : GlobalActions
     void Start ()
     {
         act = this;
+        checkExistanceCo = StartCoroutine(CheckExistanceQueue());
         LoadBlacklist();
         threadPageLoad = new Thread(new ThreadStart(ThreadedLoadPage));
+        threadPageLoad.IsBackground = true;
         buttonNext.interactable = false;
         buttonPrev.interactable = false;
-        
+
+        Data.act.tagSelectorFunc += SendTagToSearch;
     }
 	
 	// Update is called once per frame
@@ -95,6 +101,7 @@ public class E621_Navigation : GlobalActions
     public void StopLoadPageCo()
     {
         if (pageLoadCo != null) StopCoroutine(pageLoadCo);
+        if (threadPageLoad.IsAlive) threadPageLoad.Abort(threadPageLoad);
     }
 
     void LoadPage()
@@ -111,6 +118,7 @@ public class E621_Navigation : GlobalActions
     {
         yield return null;
         inputSearchField.text = currentTags;
+        currentTags = currentTags.Replace(" ", "%20");
         string url = @"https://e621.net/post/index/" + currentPage + "/" +  currentTags;
 
         objLoadPageHourglass.SetActive(true);
@@ -145,15 +153,33 @@ public class E621_Navigation : GlobalActions
         }
         Resources.UnloadUnusedAssets();
 
+        //Revisar si existen imagenes
+        if (html.IndexOf("Post.register({") == -1)
+        {
+            buttonSearch.interactable = true;
+            buttonReturn.interactable = true;
+            objLoadPageHourglass.SetActive(false);
+            CreateAdvice("ERROR", "There are no images with this tag(s).");
+            yield break;
+        }
+
+        //Si se inicio desde el boton search
+        if(currentPage == 0)
+        {
+            buttonNext.interactable = true;
+            buttonPrev.interactable = false;
+            currentPage = 1;
+        }
+
         //obtener la ultima pagina
         if (html.IndexOf("Last Page") != -1)
         {
             string last = html.Substring(0, html.IndexOf("Last Page"));
-            print(last);
+            //print(last);
             last = last.Substring(last.LastIndexOf("href=") + 6, last.Length - (last.LastIndexOf("href=") + 6));
-            print(last);
+            //print(last);
             last = last.Substring(last.IndexOf("index") + 6, last.Length - (last.IndexOf("index") + 6));
-            print(last);
+            //print(last);
             if (currentTags != "")
                 last = last.Substring(0, last.IndexOf("/"));
             else
@@ -164,6 +190,7 @@ public class E621_Navigation : GlobalActions
         else
             lastPage = 1;
 
+        
         //substring para obtener los datos de los posts
         html = html.Substring(html.IndexOf("Post.register({"), html.Length - html.IndexOf("Post.register({"));
         html = html.Substring(0, html.IndexOf("Post.blacklist_options ="));
@@ -177,120 +204,128 @@ public class E621_Navigation : GlobalActions
 
     void StartThreadLoadPage()
     {
-        if (threadPageLoad.IsAlive) threadPageLoad.Abort();
+        if (threadPageLoad.IsAlive)
+        {
+            threadPageLoad.Abort(threadPageLoad);
+            
+        }
         threadPageLoad = new Thread(new ThreadStart(ThreadedLoadPage));
-        print("oof");
+        threadPageLoad.IsBackground = true;
         threadPageLoad.Start();
+
     }
 
 
     void ThreadedLoadPage()
     {
-        //Ejecutar hasta que no haya mas datos
-        while (html.IndexOf("Post.register({") != -1)
+        try
         {
-            UnityThread.executeInUpdate(() => { print("LEL"); });
-
-            
-
-            html = html.Substring(html.IndexOf("Post.register({"), html.Length - html.IndexOf("Post.register({"));
-            //eliminar el post register actual para no ciclarse infinitamente
-            html = html.Substring(15, html.Length - 15);
-
-
-            int id = -1;
-            List<string> tags = new List<string>();
-            string urlDownload = "";
-            string urlThumb = "";
-            string urlPreview = "";
-            string rating = "";
-            string status = "";
-            string md5 = "";
-
-            string temp;
-            //obtener datos del post
-            //ID
-            temp = html.Substring(html.IndexOf("id") + 4, html.IndexOf(",") - 5);
-            id = int.Parse(temp);
-            html = html.Substring(html.IndexOf(",") + 9, html.Length - html.IndexOf(",") - 9);
-            //print(html);
-
-            //tags
-            temp = html.Substring(0, html.IndexOf(",") - 2);
-            while (temp.IndexOf(" ") != -1)
+            //Ejecutar hasta que no haya mas datos
+            while (html.IndexOf("Post.register({") != -1)
             {
-                tags.Add(temp.Substring(0, temp.IndexOf(" ")));
-                temp = temp.Substring(temp.IndexOf(" ") + 1, temp.Length - (temp.IndexOf(" ") + 1));
-                
+
+                html = html.Substring(html.IndexOf("Post.register({"), html.Length - html.IndexOf("Post.register({"));
+                //eliminar el post register actual para no ciclarse infinitamente
+                html = html.Substring(15, html.Length - 15);
+
+
+                int id = -1;
+                List<string> tags = new List<string>();
+                string urlDownload = "";
+                string urlThumb = "";
+                string urlPreview = "";
+                string rating = "";
+                string status = "";
+                string md5 = "";
+
+                string temp;
+                //obtener datos del post
+                //ID
+                temp = html.Substring(html.IndexOf("id") + 4, html.IndexOf(",") - 5);
+                id = int.Parse(temp);
+                html = html.Substring(html.IndexOf(",") + 9, html.Length - html.IndexOf(",") - 9);
+                //print(html);
+
+                //tags
+                temp = html.Substring(0, html.IndexOf(",") - 1);
+                temp += " ";
+                while (temp.IndexOf(" ") != -1)
+                {
+                    tags.Add(temp.Substring(0, temp.IndexOf(" ")));
+                    temp = temp.Substring(temp.IndexOf(" ") + 1, temp.Length - (temp.IndexOf(" ") + 1));
+                }
+
+                html = html.Substring(html.IndexOf("md5") + 6, html.Length - (html.IndexOf("md5") + 6));
+                //MD5
+                md5 = html.Substring(0, html.IndexOf(",") - 1);
+                //print("MD5: " + md5);
+                html = html.Substring(html.IndexOf("file_url") + 11, html.Length - (html.IndexOf("file_url") + 11));
+
+                //Image URL
+                urlDownload = html.Substring(0, html.IndexOf(",") - 1);
+                //print(urlDownload);
+                html = html.Substring(html.IndexOf("preview_url") + 14, html.Length - (html.IndexOf("preview_url") + 14));
+
+                //Thumb URL
+                urlThumb = html.Substring(0, html.IndexOf(",") - 1);
+                //print(urlThumb);
+                html = html.Substring(html.IndexOf("sample_url") + 13, html.Length - (html.IndexOf("sample_url") + 13));
+
+                //Preview URL
+                urlPreview = html.Substring(0, html.IndexOf(",") - 1);
+                //print(urlPreview);
+                html = html.Substring(html.IndexOf("rating") + 9, html.Length - (html.IndexOf("rating") + 9));
+
+                //Rating
+                rating = html.Substring(0, html.IndexOf(",") - 1);
+                //print(html);
+                print("Rating: " + rating);
+                html = html.Substring(html.IndexOf("rating") + 9, html.Length - (html.IndexOf("rating") + 9));
+
+                //Status
+                html = html.Substring(html.IndexOf("status") + 9, html.Length - (html.IndexOf("status") + 9));
+                status = html.Substring(0, html.IndexOf(",") - 1);
+                //print(status);
+
+                //Spawn Button
+                bool end = false;
+                UnityThread.executeInUpdate(() =>
+                {
+                    GameObject button = Instantiate(prefabNavButton, transformNavigation);
+                    E621_NavigationButton b = button.GetComponent<E621_NavigationButton>();
+                    b.urlDownload = urlDownload;
+                    b.urlThumb = urlThumb;
+                    b.urlPreview = urlPreview;
+                    b.rating = rating;
+                    b.status = status;
+                    b.md5 = md5;
+                    b.urlPage = @"https://e621.net/post/index/1/id:" + id;
+                    b.id = id;
+                    b.tags = tags;
+                    b.Initialize();
+                    end = true;
+                });
+                while (!end) { }
             }
 
-            html = html.Substring(html.IndexOf("md5") + 6, html.Length - (html.IndexOf("md5") + 6));
-            //MD5
-            md5 = html.Substring(0, html.IndexOf(",") - 1);
-            //print("MD5: " + md5);
-            html = html.Substring(html.IndexOf("file_url") + 11, html.Length - (html.IndexOf("file_url") + 11));
-
-            //Image URL
-            urlDownload = html.Substring(0, html.IndexOf(",") - 1);
-            //print(urlDownload);
-            html = html.Substring(html.IndexOf("preview_url") + 14, html.Length - (html.IndexOf("preview_url") + 14));
-
-            //Thumb URL
-            urlThumb = html.Substring(0, html.IndexOf(",") - 1);
-            //print(urlThumb);
-            html = html.Substring(html.IndexOf("sample_url") + 13, html.Length - (html.IndexOf("sample_url") + 13));
-
-            //Preview URL
-            urlPreview = html.Substring(0, html.IndexOf(",") - 1);
-            //print(urlPreview);
-            html = html.Substring(html.IndexOf("rating") + 9, html.Length - (html.IndexOf("rating") + 9));
-
-            //Rating
-            rating = html.Substring(0, html.IndexOf(",") - 1);
-            //print(rating);
-            html = html.Substring(html.IndexOf("rating") + 9, html.Length - (html.IndexOf("rating") + 9));
-
-            //Rating
-            rating = html.Substring(0, html.IndexOf(",") - 1);
-            //print(rating);
-            html = html.Substring(html.IndexOf("status") + 9, html.Length - (html.IndexOf("status") + 9));
-
-            //Status
-            status = html.Substring(0, html.IndexOf(",") - 1);
-            //print(status);
-
-            //Spawn Button
-            bool end = false;
             UnityThread.executeInUpdate(() =>
             {
-                GameObject button = Instantiate(prefabNavButton, transformNavigation);
-                E621_NavigationButton b = button.GetComponent<E621_NavigationButton>();
-                b.urlDownload = urlDownload;
-                b.urlThumb = urlThumb;
-                b.urlPreview = urlPreview;
-                b.rating = rating;
-                b.status = status;
-                b.md5 = md5;
-                b.urlPage = @"https://e621.net/post/index/1/id:" + id;
-                b.id = id;
-                b.tags = tags;
-                b.Initialize();
-                end = true;
+                buttonSearch.interactable = true;
+                buttonReturn.interactable = true;
             });
-            while (!end) { }
         }
-
-        UnityThread.executeInUpdate(() =>
+        catch
         {
-            buttonSearch.interactable = true;
-            buttonReturn.interactable = true;
-        });
+            print("Thread Error: Navigation.");
+            return;
+        }
+        
     }
 
     public void ClearViewer()
     {
         objLoadPageHourglass.SetActive(false);
-        print(transformNavigation.childCount);
+        //print(transformNavigation.childCount);
         for (int i = transformNavigation.childCount - 1; i >= 0; i--)
         {
             Destroy(transformNavigation.GetChild(i).gameObject);
@@ -338,19 +373,19 @@ public class E621_Navigation : GlobalActions
 
     public void ButtonAction(string value)
     {
+        if (threadPageLoad.IsAlive) return;
         switch(value)
         {
             case "search":
                 currentTags = inputSearchField.text;
-                currentPage = 1;
-                buttonNext.interactable = true;
-                buttonPrev.interactable = false;
+                
+                currentPage = 0;
                 LoadPage();
                 break;
             case "next":
                 currentPage++;
                 buttonNext.interactable = currentPage != lastPage;
-                buttonPrev.interactable = true;
+                buttonPrev.interactable = lastPage != 1;
                 LoadPage();
                 break;
             case "prev":
@@ -359,12 +394,137 @@ public class E621_Navigation : GlobalActions
                 buttonNext.interactable = lastPage != 1;
                 LoadPage();
                 break;
+            case "tags":
+                Data.act.TagsOpenGameObject();
+                break;
+        }
+        StopCoroutine(checkExistanceCo);
+        checkExistanceCo = StartCoroutine(CheckExistanceQueue());
+        queueExistance.Clear();
+    }
+
+    public void SendTagToSearch(string theTag)
+    {
+        if (inputSearchField.text != "") inputSearchField.text += " ";
+        inputSearchField.text += theTag;
+    }
+
+    public void OnPointerEnter()
+    {
+        Vector3 newPos = downloaderContent.anchoredPosition;
+        newPos.x *= -1;
+        downloaderContent.anchoredPosition = newPos;
+    }
+
+    public IEnumerator DownloadImageCo(string url, Sprite sprPrev, GameObject objProgress, ImageData downloaded, E621_NavigationButton origin)
+    {
+        yield return null;
+        Image imgProgress = objProgress.transform.GetChild(0).GetComponent<Image>();
+        Image imgPrev = objProgress.transform.GetChild(1).GetComponent<Image>();
+        imgPrev.sprite = sprPrev;
+        Text textProgress = objProgress.transform.GetChild(2).GetComponent<Text>();
+
+        textProgress.text = "...Downloading...";
+        
+        using (UnityWebRequest uwr = UnityWebRequest.Get(url))
+        {
+            uwr.SendWebRequest();
+            while (!uwr.isDone)
+            {
+                imgProgress.fillAmount = uwr.downloadProgress;
+                yield return null;
+            }
+            //yield return uwr.SendWebRequest();
+            if (uwr.isNetworkError || uwr.isHttpError)
+            {
+                textProgress.text = uwr.error;
+                Debug.Log(uwr.error);
+                yield return new WaitForSeconds(3f);
+                Destroy(objProgress);
+            }
+            else
+            {
+                //https://static1.e621.net/data/fa/04/fa0477361df7971421e00f3c38950f47.jpg
+                string filename = url.Substring(url.LastIndexOf("/") + 1, url.Length - (url.LastIndexOf("/") + 1));
+                filename = downloaded.id + "-" +filename;
+                byte[] result = uwr.downloadHandler.data;
+
+                //string targetUrl = @"D:\HardDrive\No pls\e621\Te lo advierto\Tools\test";
+                string targetUrl = !(downloaded.tags.Contains("dickgirl") || downloaded.tags.Contains("intersex") || downloaded.tags.Contains("herm"))
+                    ? PlayerPrefs.GetString("E621_StraightMainGal") : PlayerPrefs.GetString("E621_DickgirlMainGal");
+
+                if (downloaded.tags.Contains("animated"))
+                {
+                    targetUrl = (!targetUrl.Contains("Dickgirl") ? @"D:\HardDrive\No pls\e621\Te lo advierto\Tools\test\Straight" : @"D:\HardDrive\No pls\e621\Te lo advierto\Tools\test\Dickgirl");
+                }
+                File.WriteAllBytes(targetUrl + "/" + filename, result);
+                print(targetUrl);
+
+            }
+        }
+
+        Resources.UnloadUnusedAssets();
+        imgProgress.fillAmount = 0f;
+        textProgress.text = "Done...";
+        try
+        {
+            queueExistance.Enqueue(origin);
+        }
+        catch
+        {
+            print("IMG download: Button didn't exist anymore");
+        }
+        yield return new WaitForSeconds(1f);
+        listCoroutines.Remove(listCoroutines.Where(temp => temp.data.id == downloaded.id).Single());
+        Destroy(objProgress);
+        
+    }
+
+    public void SaveDataPopUp()
+    {
+        CreateAdvice("Exit and Save", "Would you like to save the Image Data?", 0, () =>
+         {
+             Data.act.SaveData("imageData");
+         });
+    }
+
+    Coroutine checkExistanceCo;
+    public Queue<E621_NavigationButton> queueExistance = new Queue<E621_NavigationButton>();
+
+    public IEnumerator CheckExistanceQueue()
+    {
+        while (true)
+        {
+            yield return null;
+            if(queueExistance.Count != 0)
+            {
+                E621_NavigationButton b = queueExistance.Dequeue();
+                b.existanceChecked = false;
+                b.CheckExistance();
+                float waitTime = Time.time + 3f;
+                int maxTries = 3, currentTries = 1;
+                do
+                {
+                    yield return null;
+                    if(waitTime <= Time.time && !b.existanceChecked && maxTries < currentTries)
+                    {
+                        waitTime = Time.time + 3f;
+                        print("Retry");
+                        currentTries++;
+                    }
+                    else if(!b.existanceChecked && maxTries >= currentTries)
+                    {
+                        b.imageExistance.color = Color.magenta;
+                    }
+                }
+                while (waitTime > Time.time && !b.existanceChecked);
+            }
         }
     }
 
     private void OnDestroy()
     {
-        if (threadPageLoad.IsAlive) threadPageLoad.Abort();
-        Resources.UnloadUnusedAssets();
+        Data.act.tagSelectorFunc -= SendTagToSearch;
+        if (threadPageLoad.IsAlive) threadPageLoad.Abort(threadPageLoad);
     }
 }

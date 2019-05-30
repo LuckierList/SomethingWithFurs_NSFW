@@ -313,7 +313,7 @@ public class GlobalActions : MonoBehaviour
                 CreateAdvice("The game has not been implemented yet.");
                 break;
             case "character":
-                SceneManager.LoadSceneAsync("E621_Character");
+                SceneManager.LoadSceneAsync("E621_CharacterCreator");
                 break;
             case "artist":
                 CreateAdvice("The artist has not been implemented yet.");
@@ -336,4 +336,5 @@ public class GlobalActions : MonoBehaviour
     }
 
     //-----------------------------------------------------------
+    
 }

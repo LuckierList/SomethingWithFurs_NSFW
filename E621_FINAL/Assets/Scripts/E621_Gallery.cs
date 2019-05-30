@@ -72,6 +72,8 @@ public class E621_Gallery : GlobalActions
         threadTagLeaderboard = new Thread(new ThreadStart(TagLeaderBoardCalculateThread));
         ButtonSizeManager(0, false);
         ButtonAction("configApply");
+
+        Data.act.tagSelectorFunc += InputFilterAdd;
     }
     // Update is called once per frame
     void Update()
@@ -234,93 +236,7 @@ public class E621_Gallery : GlobalActions
         buttonTags.interactable = value;
     }
     #endregion
-    //----------------------------------------------------
-    #region Tags
-    public void TagsDefault()
-    {
-        List<string> newOptions = new List<string>();
-        foreach (E621CharacterData dat in Data.act.e621CharacterData)
-        {
-            newOptions.Add(dat.tagName);
-        }
-        newOptions.Sort();
-        newOptions.Insert(0, "Select");
-        dropTagsChar.ClearOptions();
-        dropTagsChar.AddOptions(newOptions);
-
-        newOptions.Clear();
-
-        //create tags options here
-
-        TagsDefaultSpecific();
-    }
     
-    public void DropAddTagCharacter(int value)
-    {
-        if (value == 0) return;
-        dropTagsChar.value = 0;
-        dropTagsChar.RefreshShownValue();
-        InputFilterAdd(dropTagsChar.options[value].text);
-    }
-
-    public void DropAddTagArtist(int value)
-    {
-        if (value == 0) return;
-        dropTagsArtist.value = 0;
-        dropTagsArtist.RefreshShownValue();
-        InputFilterAdd(dropTagsArtist.options[value].text);
-    }
-
-    public void DropAddTagSpecific(int value)
-    {
-        if (value == 0) return;
-        if(!toggleTagsDelete.isOn)
-        {
-            dropTagsSpecific.value = 0;
-            dropTagsSpecific.RefreshShownValue();
-            InputFilterAdd(dropTagsSpecific.options[value].text);
-        }
-        else
-        {
-            dropTagsSpecific.value = 0;
-            dropTagsSpecific.RefreshShownValue();
-            CreateAdvice("Delete the selected tag?\n" + dropTagsSpecific.options[value].text,0,() =>
-            {
-                Data.act.e621SpecificTags.Remove(dropTagsSpecific.options[value].text);
-                TagsDefaultSpecific();
-            });
-        }
-    }
-
-    void TagsDefaultSpecific()
-    {
-        List<string> newOptions = new List<string>();
-        foreach (string s in Data.act.e621SpecificTags)
-        {
-            newOptions.Add(s);
-        }
-        newOptions.Sort();
-        newOptions.Insert(0, "Select");
-        dropTagsSpecific.ClearOptions();
-        dropTagsSpecific.AddOptions(newOptions);
-    }
-
-    public void InputAddTagSpecific(string value)
-    {
-        inputTagsSpecific.text = "";
-        if(value != "" && !value.Contains(" ") && !Data.act.e621SpecificTags.Contains(value))
-        {
-            Data.act.e621SpecificTags.Add(value);
-            TagsDefaultSpecific();
-        }
-    }
-
-    public void ButtonExitTags()
-    {
-        Data.act.SaveData("e621SpecificTags");
-    }
-
-    #endregion
     //----------------------------------------------------
     #region Tags Leaderboar
     public class TagLeaderboard
@@ -513,6 +429,9 @@ public class E621_Gallery : GlobalActions
 
                 PlayerPrefs.SetInt("E621_SlideshowSpeed", dropSlideSpeed.value);
                 PlayerPrefs.SetInt("E621_SlideshowRandom", toggleSlideRandom.isOn ? 1 : 0);
+                break;
+            case "tags":
+                Data.act.TagsOpenGameObject();
                 break;
         }
     }
@@ -859,6 +778,7 @@ public class E621_Gallery : GlobalActions
     //----------------------------------------------------------
     private void OnDestroy()
     {
+        Data.act.tagSelectorFunc -= InputFilterAdd;
         if (threadTagLeaderboard.IsAlive) threadTagLeaderboard.Abort();
     }
 }

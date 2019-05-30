@@ -103,6 +103,7 @@ public class E621_Characters : GlobalActions
                 showFiles.Add(s);
             else
             {
+                /*
                 E621CharacterData loaded = Data.act.e621CharacterData.Where(
                     temp => temp.tagName == Path.GetFileNameWithoutExtension(s)).SingleOrDefault();
                 if (loaded != null)
@@ -113,6 +114,7 @@ public class E621_Characters : GlobalActions
                 }
                 else if (loaded == null && toggleFilter.isOn)
                     showFiles.Add(s);
+                */
             }
         }
         showFilesUnedited = filesUnedited.ToList();
@@ -216,6 +218,7 @@ public class E621_Characters : GlobalActions
                 break;
             //Editor
             case "apply":
+                /*
                 objEditor.SetActive(false);
                 loadedData.edited = true;
                 E621CharacterData oldData = Data.act.e621CharacterData.Where(temp => temp.tagName == loadedData.tagName).SingleOrDefault();
@@ -234,6 +237,7 @@ public class E621_Characters : GlobalActions
                 objViewer.SetActive(true);
                 objEditor.SetActive(false);
                 ShowPage(currentPage);
+                */
                 break;
             case "cancel":
                 objEditor.SetActive(false);
@@ -242,7 +246,9 @@ public class E621_Characters : GlobalActions
                 ShowPage(currentPage);
                 break;
             case "openInPage":
+                /*
                 Application.OpenURL("https://e621.net/post/index/1/"+loadedData.tagName);
+                */
                 break;
             case "openSource":
                 Application.OpenURL(inputSource.text);
@@ -303,6 +309,7 @@ public class E621_Characters : GlobalActions
             //print("for");
             if (correctID == showFiles.Count) break;
             b.id = correctID;
+            /*
             E621CharacterData data = Data.act.e621CharacterData.Where
                 (
                     temp => temp.tagName == Path.GetFileNameWithoutExtension(showFiles[correctID])
@@ -317,6 +324,7 @@ public class E621_Characters : GlobalActions
             b.data = data;
             Instantiate(prefabCharButton, objGridParent.transform);
             contDelay += 0.001f;
+            */
         }
     }
 
@@ -360,6 +368,7 @@ public class E621_Characters : GlobalActions
         print("oof");
         loadedData = data;
         ClearGridChilds();
+        /*
         textCharName.text = loadedData.tagName;
         for(int i = 0; i < toggles.Length; i++)
         {
@@ -387,6 +396,7 @@ public class E621_Characters : GlobalActions
         LoadImage(imgLoading, imgError, imageThumbBig, loadedData.urlBig);
 
         int imageTotal = 0;
+        int female = 0;
         
         foreach (ImageData a in Data.act.imageData)
         {
@@ -399,6 +409,7 @@ public class E621_Characters : GlobalActions
         textExtraInfo.text = "Images:\n" + imageTotal;
         objViewer.SetActive(false);
         objEditor.SetActive(true);
+        */
     }
 
     //Viewer of Character
@@ -408,6 +419,7 @@ public class E621_Characters : GlobalActions
         loadedData = data;
         imageViewerPortrait.sprite = sprImage;
         ClearGridChilds();
+        /*
         textViewerName.text = loadedData.tagName;
         const string dataFormat = "Categories:\n{0}\n\nFavorite:\n{1}\n\nAnimated Appearances:\n{2}\n\nFetish Worth:\n{3}\n\nGood & Constant Quality:\n{4}";
         string categories = "";
@@ -468,10 +480,12 @@ public class E621_Characters : GlobalActions
             if (i == 1) fetish = say;
             if (i == 3) quality = say;
         }
-
+        
         textViewerData.text = string.Format(dataFormat, categories, data.booleans[12] ? "Yes." : "No.", animated, fetish, quality);
+        */
         int imageTotal = 0;
         int imageStraigth = 0, imageDickgirl = 0;
+        int filteredTimes = 0;
 
         urlsCharacterSaved.Clear();
         foreach (ImageData a in Data.act.imageData)
@@ -479,22 +493,29 @@ public class E621_Characters : GlobalActions
             if (a.tags.Contains(Path.GetFileNameWithoutExtension(showFiles[id])))
             {
                 urlsCharacterSaved.Add(a.filename);
-                imageTotal++;
-
-                if(a.tags.Contains("dickgirl") || a.tags.Contains("intersex") || a.tags.Contains("herm"))
+                if (!a.filtered)
                 {
-                    imageDickgirl++;
+                    imageTotal++;
+
+                    if (a.tags.Contains("dickgirl") || a.tags.Contains("intersex") || a.tags.Contains("herm"))
+                    {
+                        imageDickgirl++;
+                    }
+                    else
+                    {
+                        imageStraigth++;
+                    }
                 }
                 else
                 {
-                    imageStraigth++;
+                    filteredTimes++;
                 }
             }
         }
 
         currentChar = Path.GetFileNameWithoutExtension(showFiles[id]) + " (" + imageTotal +")";
 
-        textViewerAppearances.text = "Appeared '" + imageTotal + "' times.\n" + imageStraigth + " - Straight\n" + imageDickgirl + " - Dickgirl";
+        textViewerAppearances.text = "Appeared '" + imageTotal + "' times.\n" + imageStraigth + " - Straight\n" + imageDickgirl + " - Dickgirl\nFiltered: '" + filteredTimes + "' times.";
         objViewerChars.SetActive(true);
     }
 

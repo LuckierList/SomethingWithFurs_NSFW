@@ -92,6 +92,15 @@ public class E621_Tagger : GlobalActions
             case 4:
                 sourceUrl = inputHermNew.text;
                 break;
+            case 5:
+                sourceUrl = PlayerPrefs.GetString("E621_StraightMainGal");
+                break;
+            case 6:
+                sourceUrl = PlayerPrefs.GetString("E621_DickgirlMainGal");
+                break;
+            case 7:
+                sourceUrl = @"D:\HardDrive\No pls\e621\Te lo advierto\Tools\test";
+                break;
         }
 
         //Si hay error, finalizar, sino ejecutar thread.
@@ -398,17 +407,42 @@ public class E621_Tagger : GlobalActions
                 filenameNoExtension = filenameNoExtension.Substring(filenameNoExtension.IndexOf("-") + 1, filenameNoExtension.Length - (filenameNoExtension.IndexOf("-") + 1));
             }
 
-            ImageData loaded = Data.act.imageData.Where(temp => temp.filename == filename).SingleOrDefault();
-            int indexImage = -1;
-            if(loaded != null)
+            ImageData loaded = null;
+            try
             {
-                indexImage = Data.act.imageData.IndexOf(loaded);
+                loaded = Data.act.imageData.Where(temp => temp.filename.ToLower() == filename.ToLower()).SingleOrDefault();
+            }
+            catch
+            {
+                loaded = Data.act.imageData.Where(temp => temp.filename.ToLower() == filename.ToLower()).FirstOrDefault();
+                Data.act.imageData.RemoveAt(Data.act.imageData.IndexOf(loaded));
+                i--;
+                AddLog("Deleted duplicate data");
+                continue;
+            }
+            
+
+
+            //Se usa para saltar el refrescado de tags, esto para renombrar el archivo con ID-MD5.FORMAT
+            bool skip = false;
+            if(loaded == null)
+            {
+                loaded = Data.act.imageData.Where(temp => temp.filename.ToLower() == filename.Substring(filename.IndexOf("-") + 1, filename.Length - (filename.IndexOf("-") + 1)).ToLower()).SingleOrDefault();
+                skip = true;
             }
 
-            if(Data.act.imageData[indexImage].tags.Count != 0 && !toggleUpdateTags.isOn)
+            int indexImage = -1;
+
+            indexImage = Data.act.imageData.IndexOf(loaded);
+            print(loaded);
+
+            if(loaded != null && Data.act.imageData[indexImage].tags.Count != 0 && !toggleUpdateTags.isOn)
             {
-                AddLog("Skipped Tagged Image: " + Data.act.imageData[indexImage].filename);
-                continue;
+                if (!skip || loaded.filename.Contains("/"))
+                {
+                    AddLog("Skipped Tagged Image: " + Data.act.imageData[indexImage].filename);
+                    continue;
+                }
             }
             //cargando pagina
             AddLog("Opening E621 page...");
@@ -454,23 +488,42 @@ public class E621_Tagger : GlobalActions
             List<string> tags = new List<string>();
             page = page.Substring(page.IndexOf("tags") + 7, page.Length - (page.IndexOf("tags") + 7));
             page = page.Substring(0, page.IndexOf(",") - 1);
+            page += " ";
             while(page.IndexOf(" ") != -1)
             {
                 yield return null;
                 tags.Add(page.Substring(0, page.IndexOf(" ")));
                 page = page.Substring(page.IndexOf(" ") + 1, page.Length - (page.IndexOf(" ") + 1));
             }
-
-            //Si la imagen ya existe, agraegarle los nuevos tags
-            if(indexImage != -1)
+            string newFilename = filename;
+            if (!filename.Contains("-"))
             {
-                AddLog("Added Tags for Existent Image: " + filename);
+
+                newFilename = sourceUrl + "/" + imageID + "-" + filename.ToLower();
+                try
+                {
+                    File.Move(filesOnSource[i], newFilename);
+                }
+                catch
+                {
+                    
+                }
+                print("NEW: " + newFilename);
+            }
+            if (newFilename.Contains("/")) newFilename = newFilename.Substring(newFilename.LastIndexOf("/") + 1, newFilename.Length - (newFilename.LastIndexOf("/") + 1));
+            //Si la imagen ya existe, agraegarle los nuevos tags
+            if (indexImage != -1)
+            {
+                AddLog("Added Tags for Existent Image: " + newFilename);
                 Data.act.imageData[indexImage].tags = tags;
+                Data.act.imageData[indexImage].filename = newFilename;
                 continue;
             }
+            
+            AddLog("Added Tags for Unexistent Image: " + newFilename);
+            
 
-            AddLog("Added Tags for Unexistent Image: " + filename);
-            ImageData newImage = new ImageData("E621", imageID, filename, false);
+            ImageData newImage = new ImageData("E621", imageID, newFilename, false);
             newImage.tags = tags;
             Data.act.imageData.Add(newImage);
 
