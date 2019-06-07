@@ -24,7 +24,8 @@ public class Data : MonoBehaviour
     Queue saveQueue = new Queue();
     Thread loadThread;
     string loadName = "";
-    string persistentDataPath;
+    [HideInInspector]
+    public string persistentDataPath;
 
     [Header("Visual")]
     public GameObject objLoad;
@@ -117,10 +118,15 @@ public class Data : MonoBehaviour
         ReloadAllData();
     }
 
+    /// <summary>
+    /// Load Data
+    /// </summary>
+    /// <param name="type">imageData, e621CharacterData. e621SpecificTags, e621Blacklist</param>
     public void LoadData(string type)
     {
         if (!loadQueue.Contains(type)) loadQueue.Enqueue(type);
     }
+
 
     public void LoadDataThreaded()
     {
@@ -188,6 +194,10 @@ public class Data : MonoBehaviour
         SaveData("e621Blacklist");
     }
 
+    /// <summary>
+    /// Save Data
+    /// </summary>
+    /// <param name="type">imageData, e621CharacterData. e621SpecificTags, e621Blacklist</param>
     public void SaveData(string type)
     {
         if (!saveQueue.Contains(type)) saveQueue.Enqueue(type);
@@ -224,7 +234,6 @@ public class Data : MonoBehaviour
                 bf.Serialize(file, e621Blacklist);
                 file.Close();
                 break;
-
         }
         loadThread = null;
     }

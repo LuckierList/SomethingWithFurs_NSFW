@@ -19,7 +19,7 @@ public class E621_MainMenu : GlobalActions
 
     private void Start()
     {
-        
+
     }
 
     public void ButtonOnMouseHover(string type)
