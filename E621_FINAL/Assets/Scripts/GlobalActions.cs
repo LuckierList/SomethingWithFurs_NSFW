@@ -293,6 +293,10 @@ public class GlobalActions : MonoBehaviour
         Application.OpenURL("https://e621.net/post/index/1/md5:" + filenameNoExtension);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="scene">mainMenu, gallery, comic, video, game, character, artist, filter, database, navigation</param>
     public void OpenSceneAsync(string scene)
     {
         switch (scene)
@@ -330,7 +334,7 @@ public class GlobalActions : MonoBehaviour
                 SceneManager.LoadSceneAsync("E621_Navigator");
                 break;
             default:
-                CreateAdvice("What the...?", "Something went horribly wrong here...");
+                CreateAdvice("What the...?", "Something went horribly wrong here... (OpenSceneAsync)");
                 break;
         }
     }

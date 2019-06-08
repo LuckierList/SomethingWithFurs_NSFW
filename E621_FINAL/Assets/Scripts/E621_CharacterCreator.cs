@@ -14,7 +14,7 @@ public class E621_CharacterCreator : GlobalActions
     public InputField inputPortraits;
     public InputField inputSources, inputStraightGal, inputDickgirlGal;
     public Button buttonSave, buttonCreate, buttonPrev, buttonNext, buttonFirst, buttonLast;
-    public Sprite imgError, imgLoading, imgBlank;
+    public Sprite imgError, imgMissing, imgLoading, imgBlank;
     public GameObject prefabButtonChar;
     public RectTransform transformViewer;
     public GameObject objMainUI, objCreatorEditor;
@@ -33,7 +33,8 @@ public class E621_CharacterCreator : GlobalActions
     public Text textCreatorName;
     public Dropdown dropCreatorImageSource;
     public InputField inputCreatorTag, inputCreatorName, inputCreatorSourceFile, inputCreatorPortraitFile, inputCreatorTagHighlights, inputCreatorSpecial;
-    
+    public Button buttonDelete;
+
     string[] filesOnSource;
     string[] filesOnPortrait;
     bool editing = false;
@@ -57,6 +58,7 @@ public class E621_CharacterCreator : GlobalActions
     // Update is called once per frame
     void Update()
     {
+        buttonDelete.interactable = editing;
         //CheckCanUseButtons();
     }
 
@@ -131,6 +133,13 @@ public class E621_CharacterCreator : GlobalActions
         if (!canUse) return;
         print("gen");
         listShowableChars.Clear();
+        
+        foreach(E621CharacterData d in Data.act.e621CharacterData)
+        {
+            listShowableChars.Add(d);
+        }
+
+        /*
         foreach(string s in filesOnPortrait)
         {
             E621CharacterData d = Data.act.e621CharacterData.Where(temp => temp.portraitFile == Path.GetFileNameWithoutExtension(s)).SingleOrDefault();
@@ -139,6 +148,9 @@ public class E621_CharacterCreator : GlobalActions
                 listShowableChars.Add(d);
             }
         }
+        */
+
+
         ButtonAction("first");
     }
 
@@ -319,6 +331,13 @@ public class E621_CharacterCreator : GlobalActions
         if (!editing)
         {
             Data.act.e621CharacterData.Add(newCharData);
+
+            //---<
+            Data.act.e621CharacterData.Sort((v1, v2) => v1.sourceFile.CompareTo(v2.sourceFile));
+            //---<
+
+            OpenSceneAsync("character");
+            //ButtonApplyConfig();
             print("Added new char data");
         }
         else
@@ -326,7 +345,18 @@ public class E621_CharacterCreator : GlobalActions
             Data.act.e621CharacterData[loadedDataID] = newCharData;
             print("Edited char data");
         }
-        ButtonApplyConfig();
+    }
+
+    public void CreatorButtonDelete()
+    {
+        CreateAdvice("Warning!", "Deleting character data also deletes the image in the 'Source' Images folder.\n\nContinue?", 0, () =>
+        {
+            File.Delete(inputSources.text + @"\" + Data.act.e621CharacterData[loadedDataID].sourceFile);
+            File.Delete(inputPortraits.text + @"\" + Data.act.e621CharacterData[loadedDataID].portraitFile + ".png");
+
+            Data.act.e621CharacterData.RemoveAt(loadedDataID);
+            OpenSceneAsync("character");
+        });
     }
 
     //-------------------------------------------------
