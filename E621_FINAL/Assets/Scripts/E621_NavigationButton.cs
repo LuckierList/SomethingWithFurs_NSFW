@@ -11,7 +11,8 @@ public class E621_NavigationButton : MonoBehaviour
 {
     public Sprite imgBlank, imgError, imgLoading, imgBlacklist;
     public Color colorNull, colorOnDisk, colorNotOnDisk, colorOnFilter;
-    public Button buttonBlacklisted, buttonKeep, buttonFilter, buttonCancelDownload;
+    public Button buttonBlacklisted, buttonKeep, buttonFilter, buttonCancelDownload, buttonReload;
+    public Slider sliderProgress;
     public Image imageExistance, imagePreview, imageAnim, imageFilterStatus;
     public Text textRating, textType;
 
@@ -53,7 +54,7 @@ public class E621_NavigationButton : MonoBehaviour
 
     public void Initialize()
     {
-
+        imagePreview.sprite = imgBlank;
         textRating.text = rating.ToUpper();
         textRating.color = rating == "s" ? Color.green : rating == "q" ? Color.yellow : rating == "e" ? Color.red : Color.magenta;
 
@@ -132,22 +133,33 @@ public class E621_NavigationButton : MonoBehaviour
         GameObject objHourGlass = null;
         if (prev)
         {
-            objHourGlass = target.transform.parent.GetChild(0).gameObject;
+            objHourGlass = target.transform.parent.GetChild(1).gameObject;
             objHourGlass.SetActive(true);
         }
 
         using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(url))
         {
-            yield return uwr.SendWebRequest();
+            //yield return uwr.SendWebRequest();
+            yield return null;
+            uwr.SendWebRequest();
+            buttonReload.gameObject.SetActive(false);
+            sliderProgress.gameObject.SetActive(true);
+            while (!uwr.isDone)
+            {
+                sliderProgress.value = uwr.downloadProgress;
+                yield return null;
+            }
+            sliderProgress.gameObject.SetActive(false);
             if (uwr.isNetworkError || uwr.isHttpError)
             {
+                buttonReload.gameObject.SetActive(true);
                 target.sprite = imgError;
                 Debug.Log(uwr.error);
             }
             else
             {
-                newTexture = DownloadHandlerTexture.GetContent(uwr);
-                newSprite = Sprite.Create(newTexture, new Rect(0f, 0f, newTexture.width, newTexture.height), new Vector2(.5f, .5f), 100f);
+                yield return newTexture = DownloadHandlerTexture.GetContent(uwr);
+                yield return newSprite = Sprite.Create(newTexture, new Rect(0f, 0f, newTexture.width, newTexture.height), new Vector2(.5f, .5f), 100f);
                 target.sprite = newSprite;
             }
         }

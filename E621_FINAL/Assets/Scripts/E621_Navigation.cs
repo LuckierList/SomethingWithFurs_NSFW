@@ -486,8 +486,9 @@ public class E621_Navigation : GlobalActions
             if (uwr.isNetworkError || uwr.isHttpError)
             {
                 textProgress.text = uwr.error;
+                textProgress.color = Color.red;
                 Debug.Log(uwr.error);
-                yield return new WaitForSeconds(3f);
+                yield return new WaitForSeconds(10f);
                 Destroy(objProgress);
             }
             else

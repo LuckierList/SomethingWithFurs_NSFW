@@ -2712,7 +2712,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1605647244}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -179}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -2748,7 +2748,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.7137255}
   m_RaycastTarget: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -3153,7 +3153,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1366381674}
-  - component: {fileID: 1366381673}
   m_Layer: 0
   m_Name: ImageDownloader
   m_TagString: Untagged
@@ -3161,34 +3160,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 0
---- !u!114 &1366381673
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1366381672}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 742796a4c5ac7554babca121d7eef99b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  textProgress: {fileID: 0}
-  inputSimulDownloads: {fileID: 0}
-  sliderProgress1: {fileID: 0}
-  sliderProgress2: {fileID: 0}
-  buttonGenerateData: {fileID: 0}
-  buttonResumeDownload: {fileID: 0}
-  buttonStopDownload: {fileID: 0}
-  prefabDownloaded: {fileID: 0}
-  transformParent: {fileID: 0}
-  imgBlank: {fileID: 0}
-  currentSimulDownloads: 5
-  currentDownloading: 0
-  urlStraight: 
-  urlDickgirl: 
-  urlStraightVid: 
-  urlDickgirlVid: 
 --- !u!4 &1366381674
 Transform:
   m_ObjectHideFlags: 0
@@ -4074,8 +4045,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 1220031064}
   - {fileID: 1965441561}
+  - {fileID: 1220031064}
   - {fileID: 696060960}
   m_Father: {fileID: 1564810633}
   m_RootOrder: 7
@@ -5562,7 +5533,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1605647244}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}

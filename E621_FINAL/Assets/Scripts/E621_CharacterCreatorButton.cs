@@ -9,7 +9,6 @@ public class E621_CharacterCreatorButton : MonoBehaviour
     public Text textNamePlaceholder;
 
     public RectTransform transformAttachments;
-    public Sprite sprFavorite, sprFetish, sprMature, sprBeast, sprDickgirl, sprEgyptian, sprSizeDiff, sprDemon, sprMuscular;
 
     public E621CharacterData data;
     Coroutine thisCoroutine = null;
@@ -35,80 +34,93 @@ public class E621_CharacterCreatorButton : MonoBehaviour
         StopThisCoroutine();
         textNamePlaceholder.text = data.name;
         Atacchments();
-        thisCoroutine = StartCoroutine(LoadImage(E621_CharacterCreator.act.inputPortraits.text + @"\" + data.portraitFile + ".png"));
+        thisCoroutine = StartCoroutine(LoadImage(E621_CharacterCreator.act.inputPortraits.text + @"\" + data.portraitFile + ".png", imagePortrait));
     }
 
     void Atacchments()
     {
         string s = data.special.ToLower() + " " + data.tagHighlights.ToLower();
         GameObject objAttach = new GameObject();
+        Destroy(objAttach);
         Image imageAttach = objAttach.AddComponent<Image>();
         imageAttach.preserveAspect = true;
 
         if (s.Contains("favorite"))
         {
-            imageAttach.sprite = sprFavorite;
+            imageAttach.sprite = E621_CharacterCreator.act.sprFavorite;
             Instantiate(objAttach, transformAttachments);
         }
 
         if (s.Contains("egyptian"))
         {
-            imageAttach.sprite = sprEgyptian;
+            imageAttach.sprite = E621_CharacterCreator.act.sprEgyptian;
             Instantiate(objAttach, transformAttachments);
         }
 
         if (s.Contains("dickgirl"))
         {
-            imageAttach.sprite = sprDickgirl;
+            imageAttach.sprite = E621_CharacterCreator.act.sprDickgirl;
             Instantiate(objAttach, transformAttachments);
         }
 
         if (s.Contains("bestiality"))
         {
-            imageAttach.sprite = sprBeast;
+            imageAttach.sprite = E621_CharacterCreator.act.sprBeast;
             Instantiate(objAttach, transformAttachments);
         }
 
         if (s.Contains("muscular"))
         {
-            imageAttach.sprite = sprMuscular;
+            imageAttach.sprite = E621_CharacterCreator.act.sprMuscular;
             Instantiate(objAttach, transformAttachments);
         }
 
         if (s.Contains("size difference") || s.Contains("size_difference") || s.Contains("age difference") || s.Contains("age_difference"))
         {
-            imageAttach.sprite = sprSizeDiff;
+            imageAttach.sprite = E621_CharacterCreator.act.sprSizeDiff;
             Instantiate(objAttach, transformAttachments);
         }
 
         if (s.Contains("mature"))
         {
-            imageAttach.sprite = sprMature;
+            imageAttach.sprite = E621_CharacterCreator.act.sprMature;
             Instantiate(objAttach, transformAttachments);
         }
 
         if (s.Contains("demon"))
         {
-            imageAttach.sprite = sprDemon;
+            imageAttach.sprite = E621_CharacterCreator.act.sprDemon;
             Instantiate(objAttach, transformAttachments);
         }
 
         if (s.Contains("fetish"))
         {
-            imageAttach.sprite = sprFetish;
+            imageAttach.sprite = E621_CharacterCreator.act.sprFetish;
             Instantiate(objAttach, transformAttachments);
         }
     }
 
-    IEnumerator LoadImage(string url)
+    public void ShowOnPreview()
     {
-        imagePortrait.sprite = E621_CharacterCreator.act.imgLoading;
+        if (thisCoroutine != null) return;
+        Image target = E621_CharacterCreator.act.objPreview.transform.GetChild(E621_CharacterCreator.act.indexPreviewFull).GetComponent<Image>();
+        Image targetIco = E621_CharacterCreator.act.objPreview.transform.GetChild(E621_CharacterCreator.act.indexPreviewIco).GetComponent<Image>();
+
+        thisCoroutine = StartCoroutine(LoadImage(E621_CharacterCreator.act.inputSources.text + @"\" + data.sourceFile, target));
+        targetIco.sprite = imagePortrait.sprite;
+
+        E621_CharacterCreator.act.objPreview.SetActive(true);
+    }
+
+    IEnumerator LoadImage(string url, Image _target)
+    {
+        _target.sprite = E621_CharacterCreator.act.imgLoading;
         
         yield return new WaitForSeconds(delay);
 
         if(!System.IO.File.Exists(url))
         {
-            imagePortrait.sprite = E621_CharacterCreator.act.imgMissing;
+            _target.sprite = E621_CharacterCreator.act.imgMissing;
             yield break;
         }
 
@@ -123,7 +135,7 @@ public class E621_CharacterCreatorButton : MonoBehaviour
             {
                 newTexture = DownloadHandlerTexture.GetContent(uwr);
                 newSprite = Sprite.Create(newTexture, new Rect(0f, 0f, newTexture.width, newTexture.height), new Vector2(.5f, .5f), 100f);
-                imagePortrait.sprite = newSprite;
+                _target.sprite = newSprite;
                 textNamePlaceholder.transform.parent.gameObject.SetActive(false);
             }
         }

@@ -15,9 +15,14 @@ public class E621_CharacterCreator : GlobalActions
     public InputField inputSources, inputStraightGal, inputDickgirlGal;
     public Button buttonSave, buttonCreate, buttonPrev, buttonNext, buttonFirst, buttonLast;
     public Sprite imgError, imgMissing, imgLoading, imgBlank;
-    public GameObject prefabButtonChar;
+    public Sprite sprFavorite, sprFetish, sprMature, sprBeast, sprDickgirl, sprEgyptian, sprSizeDiff, sprDemon, sprMuscular;
+    public GameObject prefabButtonChar, objPreview;
+    public int indexPreviewFull, indexPreviewIco;
     public RectTransform transformViewer;
     public GameObject objMainUI, objCreatorEditor;
+    public InputField inputFilter;
+    public Dropdown dropFilter;
+    public Toggle toggleFilter;
 
     [SerializeField]
     List<E621CharacterData> listShowableChars = new List<E621CharacterData>();
@@ -53,23 +58,17 @@ public class E621_CharacterCreator : GlobalActions
     {
         SetSourcesToDefault();
         ButtonApplyConfig();
+        FilterInitialize();
     }
 
     // Update is called once per frame
     void Update()
     {
         buttonDelete.interactable = editing;
-        //CheckCanUseButtons();
-    }
 
-    void CheckCanUseButtons()
-    {
-        buttonSave.interactable = canUse;
-        buttonCreate.interactable = canUse;
-        buttonPrev.interactable = canUse;
-        buttonNext.interactable = canUse;
-        buttonFirst.interactable = canUse;
-        buttonLast.interactable = canUse;
+        inputFilter.interactable = canUse && !toggleFilter.isOn;
+        dropFilter.interactable = canUse;
+        toggleFilter.interactable = canUse;
     }
 
     public void SetSourcesToDefault()
@@ -80,6 +79,7 @@ public class E621_CharacterCreator : GlobalActions
         inputPortraits.text = PlayerPrefs.GetString("E621_CharPortraits");
     }
 
+    #region Button Handlers
     public void ButtonApplyConfig()
     {
         string configApplyMessage = "";
@@ -126,60 +126,6 @@ public class E621_CharacterCreator : GlobalActions
     public void ButtonSave()
     {
         CreateAdvice("Would you like to Overwrite the Character.DATA?", 0, () => { Data.act.SaveData("e621CharacterData"); });
-    }
-
-    void GeneratePages()
-    {
-        if (!canUse) return;
-        print("gen");
-        listShowableChars.Clear();
-        
-        foreach(E621CharacterData d in Data.act.e621CharacterData)
-        {
-            listShowableChars.Add(d);
-        }
-
-        /*
-        foreach(string s in filesOnPortrait)
-        {
-            E621CharacterData d = Data.act.e621CharacterData.Where(temp => temp.portraitFile == Path.GetFileNameWithoutExtension(s)).SingleOrDefault();
-            if(d != null)
-            {
-                listShowableChars.Add(d);
-            }
-        }
-        */
-
-
-        ButtonAction("first");
-    }
-
-    void ShowPage()
-    {
-        if (!canUse) return;
-        ClearGridChilds();
-        Resources.UnloadUnusedAssets();
-        
-        float contDelay = 0f;
-        for (int i = 0; i < imagesPerPage; i++)
-        {
-            int correctID = i + (imagesPerPage * currentPage);
-            if (correctID == listShowableChars.Count) break;
-            E621_CharacterCreatorButton b = Instantiate(prefabButtonChar, transformViewer).GetComponent<E621_CharacterCreatorButton>();
-            b.data = listShowableChars[correctID];
-            b.delay = contDelay;
-            b.LoadImageFunc();
-            contDelay += 0.001f;
-        }
-    }
-
-    void ClearGridChilds()
-    {
-        int childCount = transformViewer.transform.childCount;
-        for (int i = childCount - 1; i >= 0; i--)
-        {
-            Destroy(transformViewer.transform.GetChild(i).gameObject);
-        }
     }
 
     public void ButtonAction(string value)
@@ -242,6 +188,78 @@ public class E621_CharacterCreator : GlobalActions
         }
     }
 
+    #endregion
+
+    #region Page Handlers
+    void GeneratePages()
+    {
+        if (!canUse) return;
+        print("gen");
+        listShowableChars.Clear();
+        
+        foreach(E621CharacterData d in Data.act.e621CharacterData)
+        {
+            if(dropFilter.value == 0)
+            {
+                listShowableChars.Add(d);
+                continue;
+            }
+
+            string validated = (d.tagHighlights + " " + d.special).ToLower();
+            validated = validated.Replace("_", " ");
+
+            if (validated.Contains(dropFilter.options[dropFilter.value].text.ToLower()))
+            {
+                listShowableChars.Add(d);
+            }
+            
+        }
+
+        /*
+        foreach(string s in filesOnPortrait)
+        {
+            E621CharacterData d = Data.act.e621CharacterData.Where(temp => temp.portraitFile == Path.GetFileNameWithoutExtension(s)).SingleOrDefault();
+            if(d != null)
+            {
+                listShowableChars.Add(d);
+            }
+        }
+        */
+
+
+        ButtonAction("first");
+    }
+
+    void ShowPage()
+    {
+        if (!canUse) return;
+        ClearGridChilds();
+        Resources.UnloadUnusedAssets();
+        
+        float contDelay = 0f;
+        for (int i = 0; i < imagesPerPage; i++)
+        {
+            int correctID = i + (imagesPerPage * currentPage);
+            if (correctID == listShowableChars.Count) break;
+            E621_CharacterCreatorButton b = Instantiate(prefabButtonChar, transformViewer).GetComponent<E621_CharacterCreatorButton>();
+            b.data = listShowableChars[correctID];
+            b.delay = contDelay;
+            b.LoadImageFunc();
+            contDelay += 0.001f;
+        }
+    }
+
+    void ClearGridChilds()
+    {
+        int childCount = transformViewer.transform.childCount;
+        for (int i = childCount - 1; i >= 0; i--)
+        {
+            Destroy(transformViewer.transform.GetChild(i).gameObject);
+        }
+    }
+
+    #endregion
+    
     #region Creator Functions
 
     public void CreatorNew()
@@ -333,7 +351,8 @@ public class E621_CharacterCreator : GlobalActions
             Data.act.e621CharacterData.Add(newCharData);
 
             //---<
-            Data.act.e621CharacterData.Sort((v1, v2) => v1.sourceFile.CompareTo(v2.sourceFile));
+            if (Data.act.e621CharacterData.Count > 1)
+                Data.act.e621CharacterData.Sort((v1, v2) => v1.sourceFile.CompareTo(v2.sourceFile));
             //---<
 
             OpenSceneAsync("character");
@@ -428,4 +447,97 @@ public class E621_CharacterCreator : GlobalActions
     }
 
     #endregion
+
+    #region Filterers
+    public void FilterInitialize()
+    {
+        dropFilter.ClearOptions();
+        if(Data.act.e621CharacterFilterers.Count > 1) Data.act.e621CharacterFilterers.Sort();
+        List<Dropdown.OptionData> newOptions = new List<Dropdown.OptionData>();
+        newOptions.Add(new Dropdown.OptionData("No Filter"));
+        foreach(string s in Data.act.e621CharacterFilterers)
+        {
+            //Icon Compatibility
+            Sprite sp = null;
+            switch (s.ToLower())
+            {
+                case "favorite":
+                    sp = sprFavorite;
+                    break;
+                case "bestiality":
+                    sp = sprBeast;
+                    break;
+                case "dickgirl":
+                    sp = sprDickgirl;
+                    break;
+                case "mature":
+                    sp = sprMature;
+                    break;
+                case "muscular":
+                    sp = sprMuscular;
+                    break;
+                case "difference":
+                    sp = sprSizeDiff;
+                    break;
+                case "fetish":
+                    sp = sprFetish;
+                    break;
+                case "egyptian":
+                    sp = sprEgyptian;
+                    break;
+                case "demon":
+                    sp = sprDemon;
+                    break;
+            }
+            newOptions.Add(new Dropdown.OptionData(s, sp));
+        }
+        dropFilter.AddOptions(newOptions);
+        
+        dropFilter.value = 0;
+        dropFilter.RefreshShownValue();
+    }
+
+    public void DropFilter(int val)
+    {
+        if (toggleFilter.isOn && val != 0)
+        {
+            CreateAdvice("Are you sure you want to delete these filter?\n\n" + dropFilter.options[val].text, 0, () =>
+            {
+                Data.act.e621CharacterFilterers.Remove(dropFilter.options[val].text);
+                Data.act.SaveData("e621CharacterFilter");
+                FilterInitialize();
+                GeneratePages();
+            }, () =>
+            {
+                dropFilter.value = 0;
+                dropFilter.RefreshShownValue();
+                GeneratePages();
+            });
+            return;
+        }
+        GeneratePages();
+    }
+
+    public void ToggleFilter(bool val)
+    {
+        if (dropFilter.value == 0) return;
+        inputFilter.interactable = !val;
+    }
+
+    public void InputFilter(string s)
+    {
+        inputFilter.text = "";
+        if (Data.act.e621CharacterFilterers.Contains(s))
+        {
+            CreateAdvice("Filter already exists.");
+            return;
+        }
+        Data.act.e621CharacterFilterers.Add(s);
+        Data.act.SaveData("e621CharacterFilter");
+
+        FilterInitialize();
+    }
+
+    #endregion
+
 }

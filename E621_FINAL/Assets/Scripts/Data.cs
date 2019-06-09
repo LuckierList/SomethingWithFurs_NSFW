@@ -19,6 +19,8 @@ public class Data : MonoBehaviour
     public List<string> e621SpecificTags;
     [HideInInspector]
     public List<string> e621Blacklist;
+    [HideInInspector]
+    public List<string> e621CharacterFilterers;
 
     Queue loadQueue = new Queue();
     Queue saveQueue = new Queue();
@@ -110,6 +112,7 @@ public class Data : MonoBehaviour
         LoadData("e621CharacterData");
         LoadData("e621SpecificTags");
         LoadData("e621Blacklist");
+        LoadData("e621CharacterFilter");
         print("Reloaded All Data");
     }
 
@@ -121,7 +124,7 @@ public class Data : MonoBehaviour
     /// <summary>
     /// Load Data
     /// </summary>
-    /// <param name="type">imageData, e621CharacterData. e621SpecificTags, e621Blacklist</param>
+    /// <param name="type">imageData, e621CharacterData. e621SpecificTags, e621Blacklist, e621CharacterFilter</param>
     public void LoadData(string type)
     {
         if (!loadQueue.Contains(type)) loadQueue.Enqueue(type);
@@ -182,6 +185,18 @@ public class Data : MonoBehaviour
                     e621Blacklist = new List<string>();
                 }
                 break;
+            case "e621CharacterFilter":
+                if (File.Exists(persistentDataPath + "/CharacterFilter.DATA"))
+                {
+                    file = File.Open(persistentDataPath + "/CharacterFilter.DATA", FileMode.Open);
+                    e621CharacterFilterers = (List<string>)bf.Deserialize(file);
+                    file.Close();
+                }
+                else
+                {
+                    e621CharacterFilterers = new List<string>();
+                }
+                break;
         }
         loadThread = null;
     }
@@ -192,21 +207,18 @@ public class Data : MonoBehaviour
         SaveData("e621CharacterData");
         SaveData("e621SpecificTags");
         SaveData("e621Blacklist");
+        SaveData("e621CharacterFilter");
     }
 
     /// <summary>
     /// Save Data
     /// </summary>
-    /// <param name="type">imageData, e621CharacterData. e621SpecificTags, e621Blacklist</param>
+    /// <param name="type">imageData, e621CharacterData. e621SpecificTags, e621Blacklist, e621CharacterFilter</param>
     public void SaveData(string type)
     {
         if (!saveQueue.Contains(type)) saveQueue.Enqueue(type);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="type">imageData, e621CharacterData, e621SpecificTags, </param>
     public void SaveDataThreaded()
     {
         BinaryFormatter bf = new BinaryFormatter();
@@ -232,6 +244,11 @@ public class Data : MonoBehaviour
             case "e621Blacklist":
                 file = File.Create(persistentDataPath + "/Blacklist.DATA");
                 bf.Serialize(file, e621Blacklist);
+                file.Close();
+                break;
+            case "e621CharacterFilter":
+                file = File.Create(persistentDataPath + "/CharacterFilter.DATA");
+                bf.Serialize(file, e621CharacterFilterers);
                 file.Close();
                 break;
         }
