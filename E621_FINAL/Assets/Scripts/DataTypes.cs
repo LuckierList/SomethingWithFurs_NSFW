@@ -42,6 +42,8 @@ public class E621CharacterData
     public string tagHighlights;
     public string special;
 
+    public int timesSearched = 0;
+
     public float pMaxScale = 3f, pScale = 1f, pMaxOffX = 300f, pOffX = 0f, pMaxOffY = 300f, pOffY = 0f;
 
     public void SetData(string _tag, string _name, string _sFile, string _pFile, string _tagHighlights, string _special)

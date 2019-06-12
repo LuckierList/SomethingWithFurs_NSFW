@@ -11,10 +11,10 @@ public class E621_NavigationButton : MonoBehaviour
 {
     public Sprite imgBlank, imgError, imgLoading, imgBlacklist;
     public Color colorNull, colorOnDisk, colorNotOnDisk, colorOnFilter;
-    public Button buttonBlacklisted, buttonKeep, buttonFilter, buttonCancelDownload, buttonReload;
+    public Button buttonBlacklisted, buttonKeep, buttonFilter, buttonCancelDownload, buttonReload, buttonSpTags;
     public Slider sliderProgress;
     public Image imageExistance, imagePreview, imageAnim, imageFilterStatus;
-    public Text textRating, textType;
+    public Text textRating, textType, textSpTags;
 
     Sprite newSprite;
     Texture2D newTexture;
@@ -83,6 +83,7 @@ public class E621_NavigationButton : MonoBehaviour
         activeCo = StartCoroutine(GetImage(urlThumb, imagePreview));
         imageAnim.gameObject.SetActive(tags.Contains("animated"));
         buttonBlacklisted.gameObject.SetActive(!canAppear);
+        buttonSpTags.gameObject.SetActive(false);
 
         buttonKeep.interactable = false;
         buttonFilter.interactable = false;
@@ -239,10 +240,42 @@ public class E621_NavigationButton : MonoBehaviour
                 data = Data.act.imageData.Where(temp => temp.filename.ToLower().Substring(0, temp.filename.IndexOf(".")) == md5).SingleOrDefault();
             }
             //print(md5);
+
+            //Get the tags in it
+
+            string charTags = "";
+            string artistTags = "";
+            string specificTags = "";
+
+            foreach(string s in tags)
+            {
+                E621CharacterData temp1 = Data.act.e621CharacterData.Where(temp => temp.tag.Replace("é", @"\u00e9") == s).FirstOrDefault();
+                if(temp1 != null) charTags += charTags == "" ? s : " " + s;
+
+                temp1 = Data.act.e621ArtistData.Where(temp => temp.tag == s).FirstOrDefault();
+                if (temp1 != null) artistTags += artistTags == "" ? s : " " + s;
+
+                string temp2 = Data.act.e621SpecificTags.Where(temp => temp == s).FirstOrDefault();
+                if (temp2 != null) specificTags += specificTags == "" ? s : " " + s;
+            }
+
+            string finalTags = "";
+            if (charTags != "") finalTags += "Characters:\n" + charTags;
+            if (artistTags != "") finalTags += finalTags == "" ? "Artists:\n" + artistTags : "\nArists:\n" + artistTags;
+            //if (specificTags != "") finalTags += finalTags == "" ? "Specific Tags:\n" + specificTags : "\nSpecific Tags:\n" + specificTags;
+
+           
+
             UnityThread.executeInUpdate(() =>
             {
                 try
                 {
+                    if (finalTags != "")
+                    {
+                        buttonSpTags.gameObject.SetActive(true);
+                        textSpTags.text = finalTags;
+                    }
+
                     buttonKeep.interactable = data == null || data.filtered;
                     buttonFilter.interactable = data == null || !data.filtered;
                     print(data);

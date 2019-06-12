@@ -15,6 +15,9 @@ EditorBuildSettings:
     path: Assets/Scenes/E621/E621_Character.unity
     guid: f01cb767dade1884e8ab67e335129105
   - enabled: 1
+    path: Assets/Scenes/E621/E621_ArtistCreator.unity
+    guid: 6e785460a599bcb4ca2b3377e6b61526
+  - enabled: 1
     path: Assets/Scenes/E621/E621_CharacterCreator.unity
     guid: 60698726a2512894f80926371f7da798
   - enabled: 1

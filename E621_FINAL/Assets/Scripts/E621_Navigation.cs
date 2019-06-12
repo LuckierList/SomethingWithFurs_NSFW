@@ -102,9 +102,15 @@ public class E621_Navigation : GlobalActions
 
         SetSourcesToDefault();
     }
-	
-	// Update is called once per frame
-	void Update ()
+
+    private void OnDestroy()
+    {
+        Data.act.tagSelectorFunc -= SendTagToSearch;
+        if (threadPageLoad.IsAlive) threadPageLoad.Abort(threadPageLoad);
+    }
+
+    // Update is called once per frame
+    void Update ()
     {
         inputGoToPage.interactable = currentPage != 0;
         textCurrentPage.text = lastPage == 0 ? "Current Page:\n0/0" : "Current Page:\n" + currentPage + "/" + lastPage;
@@ -558,9 +564,5 @@ public class E621_Navigation : GlobalActions
     }
     
 
-    private void OnDestroy()
-    {
-        Data.act.tagSelectorFunc -= SendTagToSearch;
-        if (threadPageLoad.IsAlive) threadPageLoad.Abort(threadPageLoad);
-    }
+    
 }

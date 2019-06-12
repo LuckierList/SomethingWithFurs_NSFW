@@ -1542,7 +1542,6 @@ GameObject:
   m_Component:
   - component: {fileID: 423071530}
   - component: {fileID: 423071532}
-  - component: {fileID: 423071531}
   m_Layer: 5
   m_Name: Border
   m_TagString: Untagged
@@ -1572,35 +1571,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 720, y: 720}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &423071531
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 423071529}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
-      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 21300000, guid: 999f862d3a3ecd4499ff68e24cf1e6c1, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
 --- !u!222 &423071532
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3688,7 +3658,7 @@ MonoBehaviour:
   loadingWait: 0
   newTexture: {fileID: 0}
   newSprite: {fileID: 0}
-  mode: 0
+  mode: 1
   inputPortraits: {fileID: 459249147}
   inputSources: {fileID: 1151368970}
   inputStraightGal: {fileID: 1849183155}
@@ -3700,7 +3670,7 @@ MonoBehaviour:
   buttonFirst: {fileID: 1877133068}
   buttonLast: {fileID: 1152673311}
   imgError: {fileID: 21300000, guid: 441a475fbfc37c448ad1989dacb46f73, type: 3}
-  imgMissing: {fileID: 21300000, guid: 999f862d3a3ecd4499ff68e24cf1e6c1, type: 3}
+  imgMissing: {fileID: 21300000, guid: 490ce07fa13580247aaf0ce690aab4b8, type: 3}
   imgLoading: {fileID: 21300000, guid: 466f13f194aa88b4083babe720ada911, type: 3}
   imgBlank: {fileID: 21300000, guid: 0b48168de8afec34392ab65589c6b4e9, type: 3}
   sprFavorite: {fileID: 21300000, guid: c0d43eca133877349a3d6e26d3418111, type: 3}
@@ -4149,7 +4119,7 @@ PrefabInstance:
     - target: {fileID: 114946136393430736, guid: 55a1b3c62b1e3a244ae2423da3b4f2f1,
         type: 3}
       propertyPath: m_Text
-      value: 'Character Images Sources (Unedited):'
+      value: 'Artist Images Sources (Unedited):'
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 55a1b3c62b1e3a244ae2423da3b4f2f1, type: 3}
@@ -4641,7 +4611,7 @@ PrefabInstance:
     - target: {fileID: 114946136393430736, guid: 55a1b3c62b1e3a244ae2423da3b4f2f1,
         type: 3}
       propertyPath: m_Text
-      value: 'Character Portraits Soruce (Also Output from Creator):'
+      value: 'Artist Portraits Soruce (Also Output from Creator):'
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 55a1b3c62b1e3a244ae2423da3b4f2f1, type: 3}
@@ -5003,7 +4973,7 @@ RectTransform:
   m_GameObject: {fileID: 1352234343}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: -1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 930165331}
   m_RootOrder: 0
@@ -5026,7 +4996,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.6509434, g: 0.6509434, b: 0.6509434, a: 1}
+  m_Color: {r: 0.7735849, g: 0.40503737, b: 0.40503737, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -5035,7 +5005,7 @@ MonoBehaviour:
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_Sprite: {fileID: 21300000, guid: ad26f183c2c98544f89bfafd053857af, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -5329,7 +5299,7 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 21300000, guid: 999f862d3a3ecd4499ff68e24cf1e6c1, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 490ce07fa13580247aaf0ce690aab4b8, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -7082,7 +7052,7 @@ PrefabInstance:
     - target: {fileID: 114281302385092712, guid: 9f6a70061788e5045b6cf4dca1954ff2,
         type: 3}
       propertyPath: m_Text
-      value: Create Character Data
+      value: Create Artist Data
       objectReference: {fileID: 0}
     - target: {fileID: 114281302385092712, guid: 9f6a70061788e5045b6cf4dca1954ff2,
         type: 3}
@@ -7271,8 +7241,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.52, y: -233.29}
-  m_SizeDelta: {x: 522.67, y: 103.77}
+  m_AnchoredPosition: {x: -1.31, y: -242.43}
+  m_SizeDelta: {x: 625.96, y: 122.04}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1646187337
 MonoBehaviour:
@@ -8798,7 +8768,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 0, y: 2}
-  m_SizeDelta: {x: 0, y: 815.4}
+  m_SizeDelta: {x: 0, y: 810.6}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!224 &968895842251156564
 RectTransform:

@@ -16,6 +16,8 @@ public class Data : MonoBehaviour
     [HideInInspector]
     public List<E621CharacterData> e621CharacterData;
     [HideInInspector]
+    public List<E621CharacterData> e621ArtistData; //Used the same format because these two are practically identical in terms of properties;
+    [HideInInspector]
     public List<string> e621SpecificTags;
     [HideInInspector]
     public List<string> e621Blacklist;
@@ -33,14 +35,23 @@ public class Data : MonoBehaviour
     public GameObject objLoad;
     public Text textLoad;
     public Animation animLoad;
+    public Sprite sprLoading, sprError, sprBlank;
 
     [Header("Tag Handler")]
     public GameObject objTagHandler;
+
     public Dropdown dropTagsChar;
+    public Text textTagsCharName;
+    public Text textTagsCharStats;
+    public Image imageTagsChars;
+    public Button buttonTagsCharAdd;
+
     public Dropdown dropTagsArtist;
+
     public Dropdown dropTagsSpecific;
     public InputField inputTagsSpecific;
     public Toggle toggleTagsDelete;
+
     public delegate void TagSelectorFunc(string theTag);
     public TagSelectorFunc tagSelectorFunc;
 
@@ -65,6 +76,11 @@ public class Data : MonoBehaviour
         persistentDataPath = Application.persistentDataPath;
         ReloadAllData();
         //InitialLoadData();
+    }
+
+    private void Update()
+    {
+        dropTagsChar.interactable = e621CharacterData.Count != 0;
     }
 
     #region Main Data Functions
@@ -110,6 +126,7 @@ public class Data : MonoBehaviour
     {
         LoadData("imageData");
         LoadData("e621CharacterData");
+        LoadData("e621ArtistData");
         LoadData("e621SpecificTags");
         LoadData("e621Blacklist");
         LoadData("e621CharacterFilter");
@@ -124,7 +141,7 @@ public class Data : MonoBehaviour
     /// <summary>
     /// Load Data
     /// </summary>
-    /// <param name="type">imageData, e621CharacterData. e621SpecificTags, e621Blacklist, e621CharacterFilter</param>
+    /// <param name="type">imageData, e621CharacterData, e621ArtistData, e621SpecificTags, e621Blacklist, e621CharacterFilter</param>
     public void LoadData(string type)
     {
         if (!loadQueue.Contains(type)) loadQueue.Enqueue(type);
@@ -159,6 +176,18 @@ public class Data : MonoBehaviour
                 else
                 {
                     e621CharacterData = new List<E621CharacterData>();
+                }
+                break;
+            case "e621ArtistData":
+                if (File.Exists(persistentDataPath + "/Artist.DATA"))
+                {
+                    file = File.Open(persistentDataPath + "/Artist.DATA", FileMode.Open);
+                    e621ArtistData = (List<E621CharacterData>)bf.Deserialize(file);
+                    file.Close();
+                }
+                else
+                {
+                    e621ArtistData = new List<E621CharacterData>();
                 }
                 break;
             case "e621SpecificTags":
@@ -205,6 +234,7 @@ public class Data : MonoBehaviour
     {
         SaveData("imageData");
         SaveData("e621CharacterData");
+        SaveData("e621ArtistData");
         SaveData("e621SpecificTags");
         SaveData("e621Blacklist");
         SaveData("e621CharacterFilter");
@@ -213,7 +243,7 @@ public class Data : MonoBehaviour
     /// <summary>
     /// Save Data
     /// </summary>
-    /// <param name="type">imageData, e621CharacterData. e621SpecificTags, e621Blacklist, e621CharacterFilter</param>
+    /// <param name="type">imageData, e621CharacterData, e621ArtistData, e621SpecificTags, e621Blacklist, e621CharacterFilter</param>
     public void SaveData(string type)
     {
         if (!saveQueue.Contains(type)) saveQueue.Enqueue(type);
@@ -234,6 +264,11 @@ public class Data : MonoBehaviour
             case "e621CharacterData":
                 file = File.Create(persistentDataPath + "/Character.DATA");
                 bf.Serialize(file, e621CharacterData);
+                file.Close();
+                break;
+            case "e621ArtistData":
+                file = File.Create(persistentDataPath + "/Artist.DATA");
+                bf.Serialize(file, e621ArtistData);
                 file.Close();
                 break;
             case "e621SpecificTags":
@@ -258,7 +293,7 @@ public class Data : MonoBehaviour
 
     #region Tag Selector
     //----------------------------------------------------
-    #region Tags
+    
 
     public void TagsOpenGameObject()
     {
@@ -269,11 +304,11 @@ public class Data : MonoBehaviour
     public void TagsDefault()
     {
         List<string> newOptions = new List<string>();
-        foreach (E621CharacterData dat in Data.act.e621CharacterData)
+        foreach (E621CharacterData dat in e621CharacterData)
         {
             newOptions.Add(dat.tag);
         }
-        newOptions.Sort();
+        //newOptions.Sort();
         newOptions.Insert(0, "Select");
         dropTagsChar.ClearOptions();
         dropTagsChar.AddOptions(newOptions);
@@ -285,15 +320,56 @@ public class Data : MonoBehaviour
         TagsDefaultSpecific();
     }
 
+    #region Tag Character
+
     public void DropAddTagCharacter(int value)
     {
-        if (value == 0) return;
-        tagSelectorFunc(dropTagsChar.options[value].text);
-        dropTagsChar.value = 0;
-        dropTagsChar.RefreshShownValue();
-        
+        GlobalActions.act.LoadImageCancel();
+
+        textTagsCharName.gameObject.SetActive(value != 0);
+        textTagsCharStats.gameObject.SetActive(value != 0);
+        imageTagsChars.gameObject.SetActive(value != 0);
+        buttonTagsCharAdd.gameObject.SetActive(value != 0);
+
+        if (dropTagsChar.value == 0) return;
+
+        E621CharacterData chara = e621CharacterData[value - 1];
+
+        GlobalActions.act.LoadImage(sprLoading, sprError, imageTagsChars, PlayerPrefs.GetString("E621_CharPortraits") + @"\" + chara.portraitFile + ".png");
+        textTagsCharName.text = "Showing: " + chara.name;
+
+        int appeared = imageData.Count(t => t.tags.Contains(chara.tag) && !t.filtered);
+        int filtered = imageData.Count(t => t.tags.Contains(chara.tag) && t.filtered);
+        float div = filtered == 0 ? 1 : filtered;
+
+        textTagsCharStats.text = "Appearances: " + appeared + ". Filtered: " + filtered + ".\nGood Image Ratio: " + ((Mathf.Round(((float)appeared / div) * 1000f) / 1000f)) ;
+
     }
 
+    public void TagsButtonAddCharacter()
+    {
+        tagSelectorFunc(dropTagsChar.options[dropTagsChar.value].text);
+    }
+
+    public void TagsButtonNavigationCharacter(string val)
+    {
+        if(val == "next")
+        {
+            if (dropTagsChar.options.Count == 0 || dropTagsChar.value == dropTagsChar.options.Count - 1) return;
+            dropTagsChar.value += 1;
+            dropTagsChar.RefreshShownValue();
+        }
+        else if(val == "prev")
+        {
+            if (dropTagsChar.value == 0) return;
+            dropTagsChar.value -= 1;
+            dropTagsChar.RefreshShownValue();
+        }
+    }
+
+    #endregion
+
+    #region Tags Artist
     public void DropAddTagArtist(int value)
     {
         if (value == 0) return;
@@ -302,6 +378,9 @@ public class Data : MonoBehaviour
         tagSelectorFunc(dropTagsArtist.options[value].text);
     }
 
+    #endregion
+
+    #region Tags Specific
     public void DropAddTagSpecific(int value)
     {
         if (value == 0) return;
@@ -346,13 +425,20 @@ public class Data : MonoBehaviour
         }
     }
 
+    #endregion
     public void ButtonExitTags()
     {
+        dropTagsChar.value = 0;
+        dropTagsChar.RefreshShownValue();
+
+        dropTagsArtist.value = 0;
+        dropTagsArtist.RefreshShownValue();
+
         SaveData("e621SpecificTags");
     }
 
 
-    #endregion
+    
     //----------------------------------------------------
     #endregion
 }

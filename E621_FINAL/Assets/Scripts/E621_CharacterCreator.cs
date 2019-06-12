@@ -10,6 +10,9 @@ public class E621_CharacterCreator : GlobalActions
 
     public new static E621_CharacterCreator act;
 
+    public enum Mode { Character, Artist }
+    public Mode mode = Mode.Character;
+
     [Header("Global")]
     public InputField inputPortraits;
     public InputField inputSources, inputStraightGal, inputDickgirlGal;
@@ -75,8 +78,17 @@ public class E621_CharacterCreator : GlobalActions
     {
         inputStraightGal.text = PlayerPrefs.GetString("E621_StraightMainGal");
         inputDickgirlGal.text = PlayerPrefs.GetString("E621_DickgirlMainGal");
-        inputSources.text = PlayerPrefs.GetString("E621_CharUnedited");
-        inputPortraits.text = PlayerPrefs.GetString("E621_CharPortraits");
+        if (mode == Mode.Character)
+        {
+            inputSources.text = PlayerPrefs.GetString("E621_CharUnedited");
+            inputPortraits.text = PlayerPrefs.GetString("E621_CharPortraits");
+        }
+        else if(mode == Mode.Artist)
+        {
+            inputSources.text = PlayerPrefs.GetString("E621_ArtistUnedited");
+            inputPortraits.text = PlayerPrefs.GetString("E621_ArtistPortraits");
+        }
+        
     }
 
     #region Button Handlers
@@ -112,8 +124,18 @@ public class E621_CharacterCreator : GlobalActions
         {
             PlayerPrefs.SetString("E621_StraightMainGal", inputStraightGal.text);
             PlayerPrefs.SetString("E621_DickgirlMainGal", inputDickgirlGal.text);
-            PlayerPrefs.SetString("E621_CharPortraits", inputPortraits.text);
-            PlayerPrefs.SetString("E621_CharUnedited", inputSources.text);
+
+            if (mode == Mode.Character)
+            {
+                PlayerPrefs.SetString("E621_CharPortraits", inputPortraits.text);
+                PlayerPrefs.SetString("E621_CharUnedited", inputSources.text);
+            }
+            else if (mode == Mode.Artist)
+            {
+                PlayerPrefs.SetString("E621_ArtistPortraits", inputPortraits.text);
+                PlayerPrefs.SetString("E621_ArtistUnedited", inputSources.text);
+            }
+            
 
             filesOnSource = Directory.GetFiles(inputSources.text);
             filesOnPortrait = Directory.GetFiles(inputPortraits.text);
@@ -125,7 +147,20 @@ public class E621_CharacterCreator : GlobalActions
 
     public void ButtonSave()
     {
-        CreateAdvice("Would you like to Overwrite the Character.DATA?", 0, () => { Data.act.SaveData("e621CharacterData"); });
+        string message = "null";
+
+        if (mode == Mode.Character)
+            message = "Character";
+        else if (mode == Mode.Artist)
+            message = "Artist";
+
+        CreateAdvice("Would you like to Overwrite the " + message +  ".DATA?", 0, () =>
+        {
+            if(mode == Mode.Character)
+                Data.act.SaveData("e621CharacterData");
+            else if(mode == Mode.Artist)
+                Data.act.SaveData("e621ArtistData");
+        });
     }
 
     public void ButtonAction(string value)
@@ -196,35 +231,47 @@ public class E621_CharacterCreator : GlobalActions
         if (!canUse) return;
         print("gen");
         listShowableChars.Clear();
-        
-        foreach(E621CharacterData d in Data.act.e621CharacterData)
+
+        if (mode == Mode.Character)
         {
-            if(dropFilter.value == 0)
+            foreach (E621CharacterData d in Data.act.e621CharacterData)
             {
-                listShowableChars.Add(d);
-                continue;
-            }
+                if (dropFilter.value == 0)
+                {
+                    listShowableChars.Add(d);
+                    continue;
+                }
 
-            string validated = (d.tagHighlights + " " + d.special).ToLower();
-            validated = validated.Replace("_", " ");
+                string validated = (d.tagHighlights + " " + d.special).ToLower();
+                validated = validated.Replace("_", " ");
 
-            if (validated.Contains(dropFilter.options[dropFilter.value].text.ToLower()))
-            {
-                listShowableChars.Add(d);
-            }
-            
-        }
+                if (validated.Contains(dropFilter.options[dropFilter.value].text.ToLower()))
+                {
+                    listShowableChars.Add(d);
+                }
 
-        /*
-        foreach(string s in filesOnPortrait)
-        {
-            E621CharacterData d = Data.act.e621CharacterData.Where(temp => temp.portraitFile == Path.GetFileNameWithoutExtension(s)).SingleOrDefault();
-            if(d != null)
-            {
-                listShowableChars.Add(d);
             }
         }
-        */
+        else if (mode == Mode.Artist)
+        {
+            foreach (E621CharacterData d in Data.act.e621ArtistData)
+            {
+                if (dropFilter.value == 0)
+                {
+                    listShowableChars.Add(d);
+                    continue;
+                }
+
+                string validated = (d.tagHighlights + " " + d.special).ToLower();
+                validated = validated.Replace("_", " ");
+
+                if (validated.Contains(dropFilter.options[dropFilter.value].text.ToLower()))
+                {
+                    listShowableChars.Add(d);
+                }
+
+            }
+        }
 
 
         ButtonAction("first");
@@ -283,7 +330,11 @@ public class E621_CharacterCreator : GlobalActions
         objCreatorEditor.SetActive(true);
 
         newCharData = data;
-        loadedDataID = Data.act.e621CharacterData.IndexOf(data);
+        if (mode == Mode.Character)
+            loadedDataID = Data.act.e621CharacterData.IndexOf(data);
+        else if(mode == Mode.Artist)
+            loadedDataID = Data.act.e621ArtistData.IndexOf(data);
+
         if (loadedDataID == -1) CreateAdvice("Error getting the char ID, ABORT!");
 
         dropCreatorImageSource.ClearOptions();
@@ -326,8 +377,12 @@ public class E621_CharacterCreator : GlobalActions
         foreach(string s in filesOnSource)
         {
             string file = Path.GetFileName(s);
-            E621CharacterData dat = Data.act.e621CharacterData.Where(temp => temp.sourceFile == file).SingleOrDefault();
-            if(dat == null)
+            E621CharacterData dat = null;
+            if(mode == Mode.Character)
+                dat = Data.act.e621CharacterData.Where(temp => temp.sourceFile == file).SingleOrDefault();
+            else if(mode == Mode.Artist)
+                dat = Data.act.e621ArtistData.Where(temp => temp.sourceFile == file).SingleOrDefault();
+            if (dat == null)
             {
                 newOp.Add(file);
             }
@@ -346,35 +401,72 @@ public class E621_CharacterCreator : GlobalActions
         newCharData.SetData(inputCreatorTag.text, inputCreatorName.text, inputCreatorSourceFile.text, inputCreatorPortraitFile.text, inputCreatorTagHighlights.text, inputCreatorSpecial.text);
         newCharData.SetPortraitData(float.Parse(inputMaxScale.text), sliderScale.value, float.Parse(inputMaxOffsetX.text), sliderOffsetX.value, float.Parse(inputMaxOffsetY.text), sliderOffsetY.value);
         ScreenshotHandler.act.TakeScreenshot(newCharData.portraitFile, inputPortraits.text);
-        if (!editing)
+        if(mode == Mode.Character)
         {
-            Data.act.e621CharacterData.Add(newCharData);
+            if (!editing)
+            {
+                Data.act.e621CharacterData.Add(newCharData);
 
-            //---<
-            if (Data.act.e621CharacterData.Count > 1)
-                Data.act.e621CharacterData.Sort((v1, v2) => v1.sourceFile.CompareTo(v2.sourceFile));
-            //---<
+                //---<
+                if (Data.act.e621CharacterData.Count > 1)
+                    Data.act.e621CharacterData.Sort((v1, v2) => v1.sourceFile.CompareTo(v2.sourceFile));
+                //---<
 
-            OpenSceneAsync("character");
-            //ButtonApplyConfig();
-            print("Added new char data");
+                OpenSceneAsync("character");
+                //ButtonApplyConfig();
+                print("Added new char data");
+            }
+            else
+            {
+                Data.act.e621CharacterData[loadedDataID] = newCharData;
+                print("Edited char data");
+            }
         }
-        else
+        else if(mode == Mode.Artist)
         {
-            Data.act.e621CharacterData[loadedDataID] = newCharData;
-            print("Edited char data");
+            if (!editing)
+            {
+                Data.act.e621ArtistData.Add(newCharData);
+
+                //---<
+                if (Data.act.e621ArtistData.Count > 1)
+                    Data.act.e621ArtistData.Sort((v1, v2) => v1.sourceFile.CompareTo(v2.sourceFile));
+                //---<
+
+                OpenSceneAsync("artist");
+                //ButtonApplyConfig();
+                print("Added new artist data");
+            }
+            else
+            {
+                Data.act.e621ArtistData[loadedDataID] = newCharData;
+                print("Edited artist data");
+            }
         }
+        
     }
 
     public void CreatorButtonDelete()
     {
         CreateAdvice("Warning!", "Deleting character data also deletes the image in the 'Source' Images folder.\n\nContinue?", 0, () =>
         {
-            File.Delete(inputSources.text + @"\" + Data.act.e621CharacterData[loadedDataID].sourceFile);
-            File.Delete(inputPortraits.text + @"\" + Data.act.e621CharacterData[loadedDataID].portraitFile + ".png");
+            if (mode == Mode.Character)
+            {
+                File.Delete(inputSources.text + @"\" + Data.act.e621CharacterData[loadedDataID].sourceFile);
+                File.Delete(inputPortraits.text + @"\" + Data.act.e621CharacterData[loadedDataID].portraitFile + ".png");
 
-            Data.act.e621CharacterData.RemoveAt(loadedDataID);
-            OpenSceneAsync("character");
+                Data.act.e621CharacterData.RemoveAt(loadedDataID);
+                OpenSceneAsync("character");
+            }
+            else if(mode == Mode.Artist)
+            {
+                File.Delete(inputSources.text + @"\" + Data.act.e621ArtistData[loadedDataID].sourceFile);
+                File.Delete(inputPortraits.text + @"\" + Data.act.e621ArtistData[loadedDataID].portraitFile + ".png");
+
+                Data.act.e621ArtistData.RemoveAt(loadedDataID);
+                OpenSceneAsync("artist");
+            }
+            
         });
     }
 
@@ -527,6 +619,7 @@ public class E621_CharacterCreator : GlobalActions
     public void InputFilter(string s)
     {
         inputFilter.text = "";
+        if (s == "" || s == " ") return;
         if (Data.act.e621CharacterFilterers.Contains(s))
         {
             CreateAdvice("Filter already exists.");

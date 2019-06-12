@@ -320,7 +320,7 @@ public class GlobalActions : MonoBehaviour
                 SceneManager.LoadSceneAsync("E621_CharacterCreator");
                 break;
             case "artist":
-                CreateAdvice("The artist has not been implemented yet.");
+                SceneManager.LoadSceneAsync("E621_ArtistCreator");
                 break;
             case "filter":
                 //CreateAdvice("The filterer has not been implemented yet.");
