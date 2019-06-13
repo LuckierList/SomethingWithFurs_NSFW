@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using System.Linq;
+using System.Threading;
+
 public class E621_CharacterCreatorButton : MonoBehaviour
 {
     public Image imagePortrait;
-    public Text textNamePlaceholder;
+    public Text textNamePlaceholder, textStats;
 
     public RectTransform transformAttachments;
 
@@ -34,6 +37,7 @@ public class E621_CharacterCreatorButton : MonoBehaviour
         StopThisCoroutine();
         textNamePlaceholder.text = data.name;
         Atacchments();
+        E621_CharacterCreator.act.queueCharacterStats.Enqueue(this);
         thisCoroutine = StartCoroutine(LoadImage(E621_CharacterCreator.act.inputPortraits.text + @"\" + data.portraitFile + ".png", imagePortrait));
     }
 
@@ -100,6 +104,44 @@ public class E621_CharacterCreatorButton : MonoBehaviour
         }
     }
 
+    public void StartStatsThread()
+    {
+        Thread t = new Thread(new ThreadStart(ThreadedStats));
+        t.Start();
+    }
+
+    volatile bool endThread = false;
+    void ThreadedStats()
+    {
+        try
+        {
+            while (!endThread)
+            {
+                int appeared = Data.act.imageData.Count(t => t.tags.Contains(data.tag.Replace("é", @"\u00e9")) && !t.filtered);
+                int filtered = Data.act.imageData.Count(t => t.tags.Contains(data.tag.Replace("é", @"\u00e9")) && t.filtered);
+
+                float div = filtered == 0 ? 1 : filtered;
+                bool end = false;
+                UnityThread.executeInUpdate(() =>
+                {
+                    if(textStats != null)
+                    {
+                        textStats.text = "Art: " + appeared + "  Filt: " + filtered + "  Ratio: " + ((Mathf.Round(((float)appeared / div) * 1000f) / 1000f));
+                        E621_CharacterCreator.act.activeThreads--;
+                    }
+                    end = true;
+                });
+                while (end != false) { }
+                endThread = true;
+            }
+            print("Ended Thread");
+        }
+        catch
+        {
+            print("Error in Thread");
+            E621_CharacterCreator.act.activeThreads--;
+        }
+    }
     public void ShowOnPreview()
     {
         if (thisCoroutine != null) return;
@@ -145,6 +187,8 @@ public class E621_CharacterCreatorButton : MonoBehaviour
 
     private void OnDestroy()
     {
+        print("Destroy Button");
+        endThread = true;
         StopThisCoroutine();
     }
 }

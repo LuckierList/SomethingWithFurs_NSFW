@@ -2633,6 +2633,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1848415514509092, guid: 70c63774f688e12449e1af17dd353945, type: 3}
+      propertyPath: m_Name
+      value: DataManager
+      objectReference: {fileID: 0}
     - target: {fileID: 4812840102688470, guid: 70c63774f688e12449e1af17dd353945, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -2664,6 +2668,23 @@ PrefabInstance:
     - target: {fileID: 4812840102688470, guid: 70c63774f688e12449e1af17dd353945, type: 3}
       propertyPath: m_RootOrder
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4812840102688470, guid: 70c63774f688e12449e1af17dd353945, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4812840102688470, guid: 70c63774f688e12449e1af17dd353945, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4812840102688470, guid: 70c63774f688e12449e1af17dd353945, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7134675695546114945, guid: 70c63774f688e12449e1af17dd353945,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -36.399902
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 70c63774f688e12449e1af17dd353945, type: 3}
@@ -3723,6 +3744,8 @@ MonoBehaviour:
   inputFilter: {fileID: 1967404723}
   dropFilter: {fileID: 1732726041}
   toggleFilter: {fileID: 310800790}
+  activeThreads: 0
+  maxActiveThreads: 3
   listShowableChars: []
   imagesPerPage: 10
   currentPage: 0

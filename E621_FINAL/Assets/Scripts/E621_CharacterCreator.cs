@@ -26,6 +26,12 @@ public class E621_CharacterCreator : GlobalActions
     public InputField inputFilter;
     public Dropdown dropFilter;
     public Toggle toggleFilter;
+    [HideInInspector]
+    public Queue<E621_CharacterCreatorButton> queueCharacterStats = new Queue<E621_CharacterCreatorButton>();
+    Coroutine coroutineCharacterStats;
+    [HideInInspector]
+    public int activeThreads = 0;
+    public int maxActiveThreads = 2;
 
     [SerializeField]
     List<E621CharacterData> listShowableChars = new List<E621CharacterData>();
@@ -62,6 +68,7 @@ public class E621_CharacterCreator : GlobalActions
         SetSourcesToDefault();
         ButtonApplyConfig();
         FilterInitialize();
+        coroutineCharacterStats = StartCoroutine(CharacterStatsCo());
     }
 
     // Update is called once per frame
@@ -72,6 +79,19 @@ public class E621_CharacterCreator : GlobalActions
         inputFilter.interactable = canUse && !toggleFilter.isOn;
         dropFilter.interactable = canUse;
         toggleFilter.interactable = canUse;
+    }
+
+    IEnumerator CharacterStatsCo()
+    {
+        while (true)
+        {
+            yield return null;
+            if(queueCharacterStats.Count != 0 && activeThreads < maxActiveThreads)
+            {
+                queueCharacterStats.Dequeue().StartStatsThread();
+                activeThreads++;
+            }
+        }
     }
 
     public void SetSourcesToDefault()
@@ -281,6 +301,8 @@ public class E621_CharacterCreator : GlobalActions
     {
         if (!canUse) return;
         ClearGridChilds();
+        queueCharacterStats.Clear();
+        activeThreads = 0;
         Resources.UnloadUnusedAssets();
         
         float contDelay = 0f;

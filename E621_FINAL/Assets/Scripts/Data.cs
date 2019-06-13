@@ -47,6 +47,10 @@ public class Data : MonoBehaviour
     public Button buttonTagsCharAdd;
 
     public Dropdown dropTagsArtist;
+    public Text textTagsArtistName;
+    public Text textTagsArtistStats;
+    public Image imageTagsArtist;
+    public Button buttonTagsArtistAdd;
 
     public Dropdown dropTagsSpecific;
     public InputField inputTagsSpecific;
@@ -315,6 +319,14 @@ public class Data : MonoBehaviour
 
         newOptions.Clear();
 
+        foreach (E621CharacterData dat in e621ArtistData)
+        {
+            newOptions.Add(dat.tag);
+        }
+        newOptions.Insert(0, "Select");
+        dropTagsArtist.ClearOptions();
+        dropTagsArtist.AddOptions(newOptions);
+
         //create tags options here
 
         TagsDefaultSpecific();
@@ -324,6 +336,9 @@ public class Data : MonoBehaviour
 
     public void DropAddTagCharacter(int value)
     {
+        dropTagsArtist.value = 0;
+        dropTagsArtist.RefreshShownValue();
+
         GlobalActions.act.LoadImageCancel();
 
         textTagsCharName.gameObject.SetActive(value != 0);
@@ -370,12 +385,53 @@ public class Data : MonoBehaviour
     #endregion
 
     #region Tags Artist
+
     public void DropAddTagArtist(int value)
     {
-        if (value == 0) return;
-        dropTagsArtist.value = 0;
-        dropTagsArtist.RefreshShownValue();
-        tagSelectorFunc(dropTagsArtist.options[value].text);
+        dropTagsChar.value = 0;
+        dropTagsChar.RefreshShownValue();
+
+        GlobalActions.act.LoadImageCancel();
+
+        textTagsArtistName.gameObject.SetActive(value != 0);
+        textTagsArtistStats.gameObject.SetActive(value != 0);
+        imageTagsArtist.gameObject.SetActive(value != 0);
+        buttonTagsArtistAdd.gameObject.SetActive(value != 0);
+
+        if (dropTagsArtist.value == 0) return;
+
+        E621CharacterData chara = e621ArtistData[value - 1];
+
+        GlobalActions.act.LoadImage(sprLoading, sprError, imageTagsArtist, PlayerPrefs.GetString("E621_ArtistPortraits") + @"\" + chara.portraitFile + ".png");
+        textTagsArtistName.text = "Showing: " + chara.name;
+
+        int appeared = imageData.Count(t => t.tags.Contains(chara.tag.Replace("é", @"\u00e9")) && !t.filtered);
+        int filtered = imageData.Count(t => t.tags.Contains(chara.tag.Replace("é", @"\u00e9")) && t.filtered);
+        float div = filtered == 0 ? 1 : filtered;
+
+        textTagsArtistStats.text = "Art: " + appeared + ". Filtered: " + filtered + ".\nGood Image Ratio: " + ((Mathf.Round(((float)appeared / div) * 1000f) / 1000f));
+
+    }
+
+    public void TagsButtonAddArtist()
+    {
+        tagSelectorFunc(dropTagsArtist.options[dropTagsArtist.value].text);
+    }
+
+    public void TagsButtonNavigationArtist(string val)
+    {
+        if (val == "next")
+        {
+            if (dropTagsArtist.options.Count == 0 || dropTagsArtist.value == dropTagsArtist.options.Count - 1) return;
+            dropTagsArtist.value += 1;
+            dropTagsArtist.RefreshShownValue();
+        }
+        else if (val == "prev")
+        {
+            if (dropTagsArtist.value == 0) return;
+            dropTagsArtist.value -= 1;
+            dropTagsArtist.RefreshShownValue();
+        }
     }
 
     #endregion
@@ -426,6 +482,7 @@ public class Data : MonoBehaviour
     }
 
     #endregion
+
     public void ButtonExitTags()
     {
         dropTagsChar.value = 0;

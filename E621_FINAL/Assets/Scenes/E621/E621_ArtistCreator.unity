@@ -3693,6 +3693,8 @@ MonoBehaviour:
   inputFilter: {fileID: 1967404723}
   dropFilter: {fileID: 1732726041}
   toggleFilter: {fileID: 310800790}
+  activeThreads: 0
+  maxActiveThreads: 3
   listShowableChars: []
   imagesPerPage: 10
   currentPage: 0
