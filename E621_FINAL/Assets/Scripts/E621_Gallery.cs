@@ -688,7 +688,7 @@ public class E621_Gallery : GlobalActions
 
     public void ButtonSlideShowReturn()
     {
-        slideShowReturn += 2;
+        slideShowReturn += slideShowReturn == 0 ? 2 : 1;
     }
     
     IEnumerator SlideShow()

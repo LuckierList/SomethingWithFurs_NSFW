@@ -36,6 +36,8 @@ public class Data : MonoBehaviour
     public Text textLoad;
     public Animation animLoad;
     public Sprite sprLoading, sprError, sprBlank;
+    public GameObject objLoadingScene;
+    public AsyncOperation asyncLoadingScene;
 
     [Header("Tag Handler")]
     public GameObject objTagHandler;
@@ -85,6 +87,10 @@ public class Data : MonoBehaviour
     private void Update()
     {
         dropTagsChar.interactable = e621CharacterData.Count != 0;
+        dropTagsArtist.interactable = e621ArtistData.Count != 0;
+        dropTagsSpecific.interactable = e621SpecificTags.Count != 0;
+
+        objLoadingScene.SetActive(asyncLoadingScene != null && !asyncLoadingScene.isDone);
     }
 
     #region Main Data Functions

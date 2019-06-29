@@ -72,13 +72,14 @@ public class E621_NavigationButton : MonoBehaviour
             }
         }
 
-        if (canAppear)E621_Navigation.act.queueExistance.Enqueue(this);
-
         if (E621_Navigation.act.toggleBlacklistHide.isOn && !canAppear)
         {
             Destroy(gameObject);
             return;
         }
+
+        //if (canAppear)E621_Navigation.act.queueExistance.Enqueue(this);
+        E621_Navigation.act.queueExistance.Enqueue(this);
 
         activeCo = StartCoroutine(GetImage(urlThumb, imagePreview));
         imageAnim.gameObject.SetActive(tags.Contains("animated"));
@@ -305,9 +306,17 @@ public class E621_NavigationButton : MonoBehaviour
 
     public void ButtonFilter(string value)
     {
-        if (imagePreview.sprite == imgLoading || !canAppear)
+        ButtonFilter(value, false);
+    }
+
+    public void ButtonFilter(string value, bool skipBlackList)
+    {
+        if ((imagePreview.sprite == imgLoading || !canAppear) && !skipBlackList)
         {
-            E621_Navigation.act.CreateAdvice("You cannot Keep/Filter Blacklisted images.");
+            E621_Navigation.act.CreateAdvice("This image is BlackListed... \n\n Keep/Filter it ANYWAY?", 0, ()=>
+            {
+                ButtonFilter(value, true);
+            });
             return;
         }
 

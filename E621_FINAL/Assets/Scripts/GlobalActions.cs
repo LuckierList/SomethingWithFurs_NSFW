@@ -161,6 +161,7 @@ public class GlobalActions : MonoBehaviour
         }
         yield return null;
     }
+
     //-----------------------------------------------------------
 
     //-----------------------------------------------------------
@@ -302,10 +303,10 @@ public class GlobalActions : MonoBehaviour
         switch (scene)
         {
             case "mainMenu":
-                SceneManager.LoadSceneAsync("E621_MainMenu");
+                Data.act.asyncLoadingScene = SceneManager.LoadSceneAsync("E621_MainMenu");
                 break;
             case "gallery":
-                SceneManager.LoadSceneAsync("E621_Gallery");
+                Data.act.asyncLoadingScene = SceneManager.LoadSceneAsync("E621_Gallery");
                 break;
             case "comic":
                 CreateAdvice("The comic gallery has not been implemented yet.");
@@ -317,21 +318,21 @@ public class GlobalActions : MonoBehaviour
                 CreateAdvice("The game has not been implemented yet.");
                 break;
             case "character":
-                SceneManager.LoadSceneAsync("E621_CharacterCreator");
+                Data.act.asyncLoadingScene = SceneManager.LoadSceneAsync("E621_CharacterCreator");
                 break;
             case "artist":
-                SceneManager.LoadSceneAsync("E621_ArtistCreator");
+                Data.act.asyncLoadingScene = SceneManager.LoadSceneAsync("E621_ArtistCreator");
                 break;
             case "filter":
                 //CreateAdvice("The filterer has not been implemented yet.");
-                SceneManager.LoadSceneAsync("E621_Filterer");
+                Data.act.asyncLoadingScene = SceneManager.LoadSceneAsync("E621_Filterer");
                 break;
             case "database":
                 //CreateAdvice("The database editor has not been implemented yet.");
-                SceneManager.LoadSceneAsync("E621_Database");
+                Data.act.asyncLoadingScene = SceneManager.LoadSceneAsync("E621_Database");
                 break;
             case "navigation":
-                SceneManager.LoadSceneAsync("E621_Navigator");
+                Data.act.asyncLoadingScene = SceneManager.LoadSceneAsync("E621_Navigator");
                 break;
             default:
                 CreateAdvice("What the...?", "Something went horribly wrong here... (OpenSceneAsync)");

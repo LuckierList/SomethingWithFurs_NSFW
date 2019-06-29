@@ -75,7 +75,7 @@ public class E621_Navigation : GlobalActions
     [Header("General")]
     public Sprite imgBlank;
     public Sprite imgLoading, imgError, imgHourGlass, imgViewLocked;
-    public Toggle toggleBlacklistHide;
+    public Toggle toggleBlacklistHide, toggleBlacklistSearch;
     public Button buttonReturn;
     #endregion
 
@@ -138,8 +138,18 @@ public class E621_Navigation : GlobalActions
     {
         yield return null;
         inputSearchField.text = currentTags;
-        currentTags = currentTags.Replace(" ", "%20");
-        string url = @"https://e621.net/post/index/" + currentPage + "/" +  currentTags;
+        string urlTags = currentTags;
+        if (toggleBlacklistSearch.isOn)
+        {
+            foreach (string s in Data.act.e621Blacklist)
+            {
+                urlTags += urlTags == "" ? "~" + s : " ~" + s;
+            }
+        }
+        urlTags = urlTags.Replace(" ", "%20");
+        string url = @"https://e621.net/post/index/" + currentPage + "/" + urlTags;
+
+        print(url);
 
         objLoadPageHourglass.SetActive(true);
         //Get the page
@@ -200,7 +210,7 @@ public class E621_Navigation : GlobalActions
             //print(last);
             last = last.Substring(last.IndexOf("index") + 6, last.Length - (last.IndexOf("index") + 6));
             //print(last);
-            if (currentTags != "")
+            if (urlTags != "")
                 last = last.Substring(0, last.IndexOf("/"));
             else
                 last = last.Substring(0, last.IndexOf("rel") - 2);
