@@ -33,6 +33,228 @@ public class ImageData
 }
 
 [Serializable]
+public class FileData
+{
+
+    [SerializeField] private int id;
+    [SerializeField] private string md5;
+    [SerializeField] private int[] tags;
+    [SerializeField] private string filename;
+    [SerializeField] private string format;
+    [SerializeField] private bool filtered;
+    public float gifVel = 1f;
+    [SerializeField] private int stars = 0;
+
+    private string urlFull, urlThumb, urlPreview, rating, status;
+
+    private DateTime lastCheck;
+
+    public FileData(int _id, string _md5, string _filename, string _format, bool _filtered, int[] _tags, string _full, string _thumb, string _preview, string _rating, string _status)
+    {
+        id = _id;
+        md5 = _md5;
+        filename = _filename;
+        format = _format;
+        filtered = _filtered;
+        tags = _tags;
+
+        urlFull = _full;
+        urlThumb = _thumb;
+        urlPreview = _preview;
+        rating = _rating;
+        status = _status;
+
+        lastCheck = DateTime.Now;
+    }
+    #region Public Vars
+    public int Id
+    {
+        get
+        {
+            return id;
+        }
+
+        set
+        {
+            id = value;
+            lastCheck = DateTime.Now;
+        }
+    }
+
+    public string Md5
+    {
+        get
+        {
+            return md5;
+        }
+
+        set
+        {
+            md5 = value;
+            lastCheck = DateTime.Now;
+        }
+    }
+
+    public int[] Tags
+    {
+        get
+        {
+            return tags;
+        }
+
+        set
+        {
+            tags = value;
+            lastCheck = DateTime.Now;
+        }
+    }
+
+    public string Filename
+    {
+        get
+        {
+            return filename;
+        }
+
+        set
+        {
+            filename = value;
+            lastCheck = DateTime.Now;
+        }
+    }
+
+    public string Format
+    {
+        get
+        {
+            return format;
+        }
+
+        set
+        {
+            format = value;
+            lastCheck = DateTime.Now;
+        }
+    }
+
+    public bool Filtered
+    {
+        get
+        {
+            return filtered;
+        }
+
+        set
+        {
+            filtered = value;
+            lastCheck = DateTime.Now;
+        }
+    }
+
+    public int Stars
+    {
+        get
+        {
+            return stars;
+        }
+
+        set
+        {
+            stars = value;
+            lastCheck = DateTime.Now;
+        }
+    }
+
+    public string UrlFull
+    {
+        get
+        {
+            return urlFull;
+        }
+
+        set
+        {
+            urlFull = value;
+            lastCheck = DateTime.Now;
+        }
+    }
+
+    public string UrlThumb
+    {
+        get
+        {
+            return urlThumb;
+        }
+
+        set
+        {
+            urlThumb = value;
+            lastCheck = DateTime.Now;
+        }
+    }
+
+    public string UrlPreview
+    {
+        get
+        {
+            return urlPreview;
+        }
+
+        set
+        {
+            urlPreview = value;
+            lastCheck = DateTime.Now;
+        }
+    }
+
+    public string Rating
+    {
+        get
+        {
+            return rating;
+        }
+
+        set
+        {
+            rating = value;
+            lastCheck = DateTime.Now;
+        }
+    }
+
+    public string Status
+    {
+        get
+        {
+            return status;
+        }
+
+        set
+        {
+            status = value;
+            lastCheck = DateTime.Now;
+        }
+    }
+    #endregion
+}
+
+[Serializable]
+public class TagData
+{
+    public List<string> all;
+    public List<int> character, artist, specific, blacklist, series;
+
+    public TagData()
+    {
+        all = new List<string>();
+        character = new List<int>();
+        artist = new List<int>();
+        series = new List<int>();
+        specific = new List<int>();
+        blacklist = new List<int>();
+    }
+}
+
+[Serializable]
 public class E621CharacterData
 {
     public string tag;

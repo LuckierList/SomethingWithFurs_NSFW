@@ -14,7 +14,7 @@ public class E621_CharacterCreatorButton : MonoBehaviour
     public RectTransform transformAttachments;
 
     public E621CharacterData data;
-    Coroutine thisCoroutine = null;
+    Coroutine thisCoroutine = null, imageCountCo;
     [HideInInspector]
     public float delay;
 

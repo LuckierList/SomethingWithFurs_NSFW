@@ -10,6 +10,12 @@ using System.Threading;
 
 public class Data : MonoBehaviour
 {
+
+    #region New Data
+    public List<FileData> fileData;
+    public TagData tagData;
+    #endregion
+
     public static Data act;
     [HideInInspector]
     public List<ImageData> imageData;
@@ -93,6 +99,36 @@ public class Data : MonoBehaviour
         objLoadingScene.SetActive(asyncLoadingScene != null && !asyncLoadingScene.isDone);
     }
 
+    #region TagData Functions
+    public int TagData_GenerateID(string _tag)
+    {
+        int tagID = tagData.all.IndexOf(_tag);
+        if (tagID == -1)
+        {
+            tagData.all.Add(_tag);
+            tagID = tagData.all.IndexOf(_tag);
+        }
+        if (tagID == -1) Debug.LogError("ALERT! Invalid tag. It somehow was not generated!");
+        return tagID;
+    }
+
+    public int TagData_GetIdByString(string _tag)
+    {
+        return tagData.all.IndexOf(_tag);
+    }
+
+    public string TagData_GetStringByID(int _tag)
+    {
+        string theTag = "?¿?";
+        if (_tag >= 0 && _tag < tagData.all.Count)
+        {
+            theTag = tagData.all[_tag];
+        }
+        if (theTag == "?¿?") Debug.LogError("ALERT! Invalid tag. It somehow was not returned!");
+        return theTag;
+    }
+    #endregion
+
     #region Main Data Functions
     IEnumerator DataLoader()
     {
@@ -134,6 +170,9 @@ public class Data : MonoBehaviour
 
     public void ReloadAllData()
     {
+        LoadData("fileData");
+        LoadData("tagData");
+
         LoadData("imageData");
         LoadData("e621CharacterData");
         LoadData("e621ArtistData");
@@ -151,7 +190,7 @@ public class Data : MonoBehaviour
     /// <summary>
     /// Load Data
     /// </summary>
-    /// <param name="type">imageData, e621CharacterData, e621ArtistData, e621SpecificTags, e621Blacklist, e621CharacterFilter</param>
+    /// <param name="type">fileData, tagData, imageData, e621CharacterData, e621ArtistData, e621SpecificTags, e621Blacklist, e621CharacterFilter</param>
     public void LoadData(string type)
     {
         if (!loadQueue.Contains(type)) loadQueue.Enqueue(type);
@@ -164,6 +203,30 @@ public class Data : MonoBehaviour
         FileStream file = null;
         switch (loadName)
         {
+            case "fileData":
+                if (File.Exists(persistentDataPath + "/FileData.DATA"))
+                {
+                    file = File.Open(persistentDataPath + "/FileData.DATA", FileMode.Open);
+                    fileData = (List<FileData>)bf.Deserialize(file);
+                    file.Close();
+                }
+                else
+                {
+                    fileData = new List<FileData>();
+                }
+                break;
+            case "tagData":
+                if (File.Exists(persistentDataPath + "/TagData.DATA"))
+                {
+                    file = File.Open(persistentDataPath + "/TagData.DATA", FileMode.Open);
+                    tagData = (TagData)bf.Deserialize(file);
+                    file.Close();
+                }
+                else
+                {
+                    tagData = new TagData();
+                }
+                break;
             case "imageData":
                 if (File.Exists(persistentDataPath + "/ImageData.DATA"))
                 {
@@ -242,6 +305,9 @@ public class Data : MonoBehaviour
 
     public void SaveAllData()
     {
+        SaveData("fileData");
+        SaveData("tagData");
+
         SaveData("imageData");
         SaveData("e621CharacterData");
         SaveData("e621ArtistData");
@@ -253,7 +319,7 @@ public class Data : MonoBehaviour
     /// <summary>
     /// Save Data
     /// </summary>
-    /// <param name="type">imageData, e621CharacterData, e621ArtistData, e621SpecificTags, e621Blacklist, e621CharacterFilter</param>
+    /// <param name="type">fileData, tagData, imageData, e621CharacterData, e621ArtistData, e621SpecificTags, e621Blacklist, e621CharacterFilter</param>
     public void SaveData(string type)
     {
         if (!saveQueue.Contains(type)) saveQueue.Enqueue(type);
@@ -266,6 +332,16 @@ public class Data : MonoBehaviour
 
         switch (loadName)
         {
+            case "fileData":
+                file = File.Create(persistentDataPath + "/FileData.DATA");
+                bf.Serialize(file, fileData);
+                file.Close();
+                break;
+            case "tagData":
+                file = File.Create(persistentDataPath + "/TagData.DATA");
+                bf.Serialize(file, tagData);
+                file.Close();
+                break;
             case "imageData":
                 file = File.Create(persistentDataPath + "/ImageData.DATA");
                 bf.Serialize(file, imageData);

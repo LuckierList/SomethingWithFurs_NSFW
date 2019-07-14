@@ -313,7 +313,9 @@ public class E621_Navigation : GlobalActions
                 html = html.Substring(html.IndexOf("rating") + 9, html.Length - (html.IndexOf("rating") + 9));
 
                 //Status
+                print(html);
                 html = html.Substring(html.IndexOf("status") + 9, html.Length - (html.IndexOf("status") + 9));
+                print(html);
                 status = html.Substring(0, html.IndexOf(",") - 1);
                 //print(status);
 
